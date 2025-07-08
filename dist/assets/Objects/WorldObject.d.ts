@@ -1,0 +1,30 @@
+import { HitBox } from "../../physic/boundingBox/HitBox";
+import { ICollideable } from "../../physic/property/ICollideable";
+import { IMoveable } from "../../physic/property/IMoveable";
+import { Vector2 } from "../../util/Vector2";
+import { Chunk } from "../worlds/Chunk";
+import { World } from "../worlds/World";
+import { SceneObject } from "./SceneObject";
+export declare abstract class WorldObject<HitBoxType extends HitBox> extends SceneObject implements ICollideable, IMoveable {
+    constructor(pos: Vector2, hitBox: HitBoxType, angle?: number);
+    abstract update(dt: number): void;
+    shouldUpdate(): boolean;
+    shouldRender(): boolean;
+    notifyOfClick(worldPos: Vector2): void;
+    protected world: World;
+    protected chunk: Chunk;
+    recentlyMoved: boolean;
+    setWorld(world: World): void;
+    setChunk(chunk: Chunk): void;
+    getChunk(): Chunk;
+    pos: Vector2;
+    hitBox: HitBoxType;
+    orientation: number;
+    translatedPoints: Vector2[];
+    alreadyTranslated: boolean;
+    translatePoints(): Vector2[];
+    isCollidingWith(other: ICollideable): boolean;
+    rotate(angle: number): void;
+    moveDirection(direction: number, distance: number): void;
+    move(move: Vector2): void;
+}
