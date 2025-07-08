@@ -1,5 +1,5 @@
-import { Util } from "../../util/Util.js";
-import { HitBox } from "./HitBox.js";
+import { Util } from "../../util/Util";
+import { HitBox } from "./HitBox";
 export class Circle extends HitBox {
     constructor(radius = 0) {
         super();

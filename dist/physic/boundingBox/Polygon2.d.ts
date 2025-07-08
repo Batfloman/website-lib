@@ -1,5 +1,5 @@
-import { Vector2 } from "../../util/Vector2.js";
-import { HitBox } from "./HitBox.js";
+import { Vector2 } from "../../math/Vector2";
+import { HitBox } from "./HitBox";
 export declare class Polygon2 extends HitBox {
     model: Vector2[];
     constructor(model: Vector2[]);
