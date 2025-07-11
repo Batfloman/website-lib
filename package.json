@@ -3,17 +3,17 @@
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "dist/index.d.mts",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.js",
       "require": "./dist/index.js"
     }
   },
   "scripts": {
-    "index": "node create_index.js",
-    "build": "tsup",
+    "prebuild": "node create_index.cjs",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
