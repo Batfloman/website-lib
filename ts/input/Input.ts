@@ -1,5 +1,6 @@
-import { Util } from "../util/Util";
-import { Vector2 } from "../math/Vector2";
+import { Util } from "util";
+import { Vector2 } from "math";
+import { inputKey } from "./inputKeys";
 
 const keys: Map<string, inputKey> = new Map([
   ["a", "a"],

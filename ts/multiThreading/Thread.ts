@@ -1,3 +1,5 @@
+import { Util } from "util";
+
 export class Thread {
   blobURL: string;
   worker: Worker;

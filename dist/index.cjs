@@ -1,8 +1,58 @@
+"use strict";
 var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
 };
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// ts/index.ts
+var index_exports = {};
+__export(index_exports, {
+  Camera: () => Camera,
+  Canvas: () => Canvas,
+  CanvasCamera: () => CanvasCamera,
+  CanvasRenderer: () => CanvasRenderer,
+  Circle: () => Circle,
+  Collision: () => Collision,
+  Color: () => Color,
+  ControllableObject: () => ControllableObject,
+  GameLoop: () => GameLoop,
+  GameManager: () => GameManager,
+  GameObject: () => GameObject,
+  HitBox: () => HitBox,
+  Input: () => Input,
+  Matrix2: () => Matrix2,
+  Polygon2: () => Polygon2,
+  RealTimeManager: () => RealTimeManager,
+  Rectangle: () => Rectangle,
+  Renderer: () => Renderer,
+  SAT: () => SAT,
+  Scene: () => Scene,
+  SceneObject: () => SceneObject,
+  Thread: () => Thread,
+  Triangle: () => Triangle,
+  Triangulation: () => Triangulation,
+  TurnBasedManager: () => TurnBasedManager,
+  TwoKeyMap: () => TwoKeyMap,
+  Util: () => Util10,
+  Vector2: () => Vector2,
+  Zoom: () => Zoom,
+  math: () => math,
+  vector: () => vector
+});
+module.exports = __toCommonJS(index_exports);
 
 // ts/dataStructs/TwoKeyMap.ts
 var TwoKeyMap = class {
@@ -97,7 +147,7 @@ var TurnBasedManager = class extends GameManager {
 };
 
 // ts/engine/display/Color.ts
-import { Util } from "util";
+var import_util = require("util");
 var Color = class _Color {
   static none = new _Color(0, 0, 0, 0);
   r = 0;
@@ -138,7 +188,7 @@ var Color = class _Color {
     );
   }
   static getRandomNamedColor() {
-    return Util.array.getRandomItem(Array.from(colors.values()));
+    return import_util.Util.array.getRandomItem(Array.from(colors.values()));
   }
   static get(color) {
     if (!colors.has(color)) {
@@ -303,7 +353,7 @@ var Renderer = class {
 };
 
 // ts/math/Matrix.ts
-import { Util as Util2 } from "util";
+var import_util2 = require("util");
 var Matrix2 = class {
   cells;
   xSize;
@@ -328,8 +378,8 @@ var Matrix2 = class {
   }
   get(x, y) {
     const yIndex = this.ySize - y - 1;
-    const xarr = Util2.array.getItemCyclic(this.cells, yIndex);
-    return Util2.array.getItemCyclic(xarr, x);
+    const xarr = import_util2.Util.array.getItemCyclic(this.cells, yIndex);
+    return import_util2.Util.array.getItemCyclic(xarr, x);
   }
   set(x, y, content) {
     if (x < 0 || x >= this.getSizeX()) {
@@ -352,7 +402,7 @@ var Matrix2 = class {
 };
 
 // ts/math/Vector2.ts
-import { Util as Util3 } from "util";
+var import_util3 = require("util");
 var Vector2 = class _Vector2 {
   x;
   y;
@@ -385,7 +435,7 @@ var Vector2 = class _Vector2 {
     return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
   }
   angle(vec2) {
-    const angleBetween = Util3.math.trigonometry.arccos(
+    const angleBetween = import_util3.Util.math.trigonometry.arccos(
       this.dotProduct(vec2) / (this.getMagnitude() * vec2.getMagnitude())
     );
     if (isNaN(angleBetween)) return 0;
@@ -397,7 +447,7 @@ var Vector2 = class _Vector2 {
     return new _Vector2(vec1.x + vec2.x, vec1.y + vec2.y);
   }
   static moveInDirectionFromPoint(start, direction, distance) {
-    direction = Util3.math.convert.DegToRad(direction);
+    direction = import_util3.Util.math.convert.DegToRad(direction);
     const dx = Math.cos(direction) * distance;
     const dy = Math.sin(direction) * distance;
     return new _Vector2(start.x + dx, start.y + dy);
@@ -508,7 +558,7 @@ var vector;
 })(vector || (vector = {}));
 
 // ts/engine/physic/algorithms/Collision.ts
-import { Util as Util6 } from "util";
+var import_util6 = require("util");
 
 // ts/engine/physic/boundingBox/HitBox.ts
 var HitBox = class {
@@ -597,10 +647,10 @@ var SAT = class {
 };
 
 // ts/engine/physic/algorithms/Triangulation.ts
-import { Util as Util5 } from "util";
+var import_util5 = require("util");
 
 // ts/engine/physic/boundingBox/Polygon2.ts
-import { Util as Util4 } from "util";
+var import_util4 = require("util");
 var Polygon2 = class _Polygon2 extends HitBox {
   // points relative to a (0|0) center with 0° rotation
   model = new Array();
@@ -658,7 +708,7 @@ var Polygon2 = class _Polygon2 extends HitBox {
     let area = 0;
     for (let i = 0; i < polygon.model.length; i++) {
       const a = polygon.model[i];
-      const b = Util4.array.getItemCyclic(polygon.model, i + 1);
+      const b = import_util4.Util.array.getItemCyclic(polygon.model, i + 1);
       area += a.x * b.y;
       area -= a.y * b.x;
     }
@@ -671,9 +721,9 @@ var Polygon2 = class _Polygon2 extends HitBox {
     if (polygon.model.length <= 3) return true;
     const winding = _Polygon2.findWinding(polygon);
     for (let i = 0; i < polygon.model.length; i++) {
-      const a = Util4.array.getItemCyclic(polygon.model, i - 1);
+      const a = import_util4.Util.array.getItemCyclic(polygon.model, i - 1);
       const b = polygon.model[i];
-      const c = Util4.array.getItemCyclic(polygon.model, i + 1);
+      const c = import_util4.Util.array.getItemCyclic(polygon.model, i + 1);
       const ba = a.subtract(b);
       const bc = c.subtract(b);
       if (!_Polygon2.isConvex(winding, ba.crossProduct(bc))) return false;
@@ -692,7 +742,7 @@ var Polygon2 = class _Polygon2 extends HitBox {
     const winding = _Polygon2.findWinding(polygon);
     for (let i = 0; i < polygon.model.length; i++) {
       const a = polygon.model[i];
-      const b = Util4.array.getItemCyclic(polygon.model, i - 1);
+      const b = import_util4.Util.array.getItemCyclic(polygon.model, i - 1);
       const a_to_b = b.subtract(a);
       const a_to_p = point.subtract(a);
       const cross = a_to_b.crossProduct(a_to_p);
@@ -730,9 +780,9 @@ var Triangulation = class _Triangulation {
     }
     while (indexList.length > 3) {
       for (let i = 0; i < indexList.length; i++) {
-        const i1 = Util5.array.getItemCyclic(indexList, i - 1);
+        const i1 = import_util5.Util.array.getItemCyclic(indexList, i - 1);
         const i2 = indexList[i];
-        const i3 = Util5.array.getItemCyclic(indexList, i + 1);
+        const i3 = import_util5.Util.array.getItemCyclic(indexList, i + 1);
         const va = vertices[i1];
         const vb = vertices[i2];
         const vc = vertices[i3];
@@ -751,7 +801,7 @@ var Triangulation = class _Triangulation {
         if (!isEar) continue;
         const ear = new Ear(obj.pos, new Triangle(va, vb, vc), obj.orientation);
         ears.push(ear);
-        Util5.array.removeItemAtIndex(indexList, i);
+        import_util5.Util.array.removeItemAtIndex(indexList, i);
         break;
       }
     }
@@ -797,7 +847,7 @@ var Ear = class {
     this.alreadyTranslated = false;
   }
   moveDirection(degrees, distance) {
-    const rad = Util5.math.convert.DegToRad(degrees);
+    const rad = import_util5.Util.math.convert.DegToRad(degrees);
     const dx = Math.cos(rad) * distance;
     const dy = Math.sin(rad) * distance;
     this.pos.x += dx;
@@ -847,7 +897,7 @@ var Collision;
   }
   Collision2.potentialCollision = potentialCollision;
   function circleCollision(c1, r1, c2, r2) {
-    return Util6.vector.distance(c1, c2) < r1 + r2;
+    return import_util6.Util.vector.distance(c1, c2) < r1 + r2;
   }
   Collision2.circleCollision = circleCollision;
 })(Collision || (Collision = {}));
@@ -871,7 +921,7 @@ var Rectangle = class extends Polygon2 {
 };
 
 // ts/engine/display/camera/Camera.ts
-import { Util as Util7 } from "util";
+var import_util7 = require("util");
 
 // ts/engine/display/camera/Zoom.ts
 var Zoom = class {
@@ -930,7 +980,7 @@ var Camera = class {
     this.alreadyTranslated = false;
   }
   moveDirection(degrees, distance) {
-    const rad = Util7.math.convert.DegToRad(degrees);
+    const rad = import_util7.Util.math.convert.DegToRad(degrees);
     const dx = Math.cos(rad) * distance;
     const dy = Math.sin(rad) * distance;
     this.pos.x += dx;
@@ -957,7 +1007,7 @@ var Camera = class {
 };
 
 // ts/input/Input.ts
-import { Util as Util8 } from "util";
+var import_util8 = require("util");
 var keys = /* @__PURE__ */ new Map([
   ["a", "a"],
   ["b", "b"],
@@ -1048,7 +1098,7 @@ var Input = class _Input {
     const listener = _Input.eventListener.get(event);
     if (!listener) return;
     for (let lis of listener) {
-      if (lis.obj == obj) Util8.array.removeItem(listener, lis);
+      if (lis.obj == obj) import_util8.Util.array.removeItem(listener, lis);
     }
   }
   static notifyOfEvent(event) {
@@ -1068,7 +1118,7 @@ var Input = class _Input {
   static keyUp(key) {
     if (!key) return;
     if (this.pressedKeys.includes(key)) {
-      Util8.array.removeItem(this.pressedKeys, key);
+      import_util8.Util.array.removeItem(this.pressedKeys, key);
     }
   }
   static getInputKey(key) {
@@ -1186,7 +1236,7 @@ var SceneObject = class {
 };
 
 // ts/engine/entities/GameObject.ts
-import { Util as Util9 } from "util";
+var import_util9 = require("util");
 var GameObject = class extends SceneObject {
   pos = new Vector2();
   shouldUpdate() {
@@ -1196,7 +1246,7 @@ var GameObject = class extends SceneObject {
     return true;
   }
   moveDirection(degrees, distance) {
-    const rad = Util9.math.convert.DegToRad(degrees);
+    const rad = import_util9.Util.math.convert.DegToRad(degrees);
     const dx = Math.cos(rad) * distance;
     const dy = Math.sin(rad) * distance;
     this.pos.x += dx;
@@ -1385,7 +1435,8 @@ var Util10 = {
   ...math_util_exports,
   ...vector_util_exports
 };
-export {
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
   Camera,
   Canvas,
   CanvasCamera,
@@ -1412,10 +1463,10 @@ export {
   Triangulation,
   TurnBasedManager,
   TwoKeyMap,
-  Util10 as Util,
+  Util,
   Vector2,
   Zoom,
   math,
   vector
-};
-//# sourceMappingURL=index.js.map
+});
+//# sourceMappingURL=index.cjs.map
