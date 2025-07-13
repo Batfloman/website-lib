@@ -1,16 +1,13 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-	entry: ['ts/index.ts'], // Dein Einstiegspunkt
-	format: ['esm', "cjs"],         // ES Module für Browser
-	dts: true,
-	splitting: false,        // Kein Code-Splitting (optional)
-	sourcemap: true,
-	clean: true,
-	outDir: 'dist',
-	// Automatically fix import paths to add `.js` extensions for browser compatibility
+	entry: ['ts/index.ts'], // Einstiegspunkt(e)
+	format: ['esm', 'cjs'],  // Ausgabeformate
+	dts: true,               // .d.ts-Dateien generieren
+	sourcemap: true,         // Source Maps erzeugen
+	clean: true,             // "dist"-Verzeichnis vor Build löschen
+	minify: false,            // Kein Minify im Development
 	esbuildOptions(options) {
 		options.bundle = true; // bundeln für saubere Imports
 	},
 });
-
