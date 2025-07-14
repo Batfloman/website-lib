@@ -1,8 +1,4 @@
-import { Vector2 } from "math";
+import { ITranslateable } from "./ITranslateable";
+import { IRotateable } from "./IRotateable";
 
-export interface IMoveable {
-  pos: Vector2;
-
-  moveDirection(degrees: number, distance: number): void;
-  move(translation_vec: Vector2): void;
-}
+export interface IMoveable extends ITranslateable, IRotateable { }
