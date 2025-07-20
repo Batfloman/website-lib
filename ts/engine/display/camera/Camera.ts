@@ -1,36 +1,23 @@
 import { Collision, HitBox, Rectangle } from "engine/physic";
-import { ICollideable } from "engine/propertys";
+import { CollideableBehaviour, ICollideable, IMoveable, RotateBehaviour, TranslationBehavior } from "engine/propertys";
 import { Vector2 } from "math";
 import { Util } from "util";
 import { Zoom } from "./Zoom";
 
-export class Camera implements ICollideable {
+export class Camera implements ICollideable<HitBox>, IMoveable {
 	pos: Vector2 = new Vector2();
-	lockMovement: boolean = false;
+	hitBox: Rectangle;
 	orientation: number = 0;
+	collider: CollideableBehaviour = new CollideableBehaviour(this);
+	mover: TranslationBehavior = new TranslationBehavior(this);
+	rotator: RotateBehaviour = new RotateBehaviour(this);
 
-	hitBox: HitBox;
+	lockMovement: boolean = false;
 
 	protected zoom = new Zoom()
 
 	constructor(width: number, height: number) {
 		this.hitBox = new Rectangle(width, height);
-	}
-
-	move(translation_vec: Vector2): void {
-		this.pos.x += translation_vec.x
-		this.pos.y += translation_vec.y
-
-		this.alreadyTranslated = false;
-	}
-	moveDirection(degrees: number, distance: number): void {
-		const rad = Util.math.convert.DegToRad(degrees)
-		const dx = Math.cos(rad) * distance;
-		const dy = Math.sin(rad) * distance;
-		this.pos.x += dx;
-		this.pos.y += dy;
-
-		this.alreadyTranslated = false;
 	}
 
 	rotate(degrees: number) {
@@ -46,7 +33,7 @@ export class Camera implements ICollideable {
 	translatePoints(): Vector2[] {
 		if (this.alreadyTranslated) return this.translatedPoints;
 
-		this.hitBox.setScale(1 / this.zoom.currentZoom);
+		this.hitBox.scaler.setScale(1 / this.zoom.currentZoom);
 		this.translatedPoints = this.hitBox.translatePoints(this.pos, this.orientation);
 		this.alreadyTranslated = true
 		return this.translatedPoints;
