@@ -19,25 +19,6 @@ declare class GameLoop {
     private loop;
 }
 
-declare class Vector2 {
-    x: number;
-    y: number;
-    constructor(x?: number, y?: number);
-    add(vec2: Vector2): Vector2;
-    subtract(vec2: Vector2): Vector2;
-    scale(scalar: number): Vector2;
-    dotProduct(vec2: Vector2): number;
-    crossProduct(vec2: Vector2): number;
-    vectorTo(point: Vector2): Vector2;
-    getNormal(): Vector2;
-    getMagnitude(): number;
-    angle(vec2: Vector2): number;
-    static add(vec1: Vector2, vec2: Vector2): Vector2;
-    static moveInDirectionFromPoint(start: Vector2, direction: number, distance: number): Vector2;
-    static rotateAroundCenter(center: Vector2, vec: Vector2, angle: number): Vector2;
-    static setAngleAroundCenter(center: Vector2, vec: Vector2, angle: number): Vector2;
-}
-
 declare class Color {
     static none: Color;
     r: number;
@@ -56,6 +37,25 @@ declare class Color {
 }
 declare const colors: Map<colors, Color>;
 type colors = "aliceblue" | "antiquewhite" | "aqua" | "aquamarine" | "azure" | "beige" | "bisque" | "black" | "blanchedalmond" | "blue" | "blueviolet" | "brown" | "burlywood" | "cadetblue" | "chartreuse" | "chocolate" | "coral" | "cornflowerblue" | "cornsilk" | "crimson" | "cyan" | "darkblue" | "darkcyan" | "darkgoldenrod" | "darkgray" | "darkgreen" | "darkkhaki" | "darkmagenta" | "darkolivegreen" | "darkorange" | "darkorchid" | "darkred" | "darksalmon" | "darkseagreen" | "darkslateblue" | "darkslategray" | "darkturquoise" | "darkviolet" | "deeppink" | "deepskyblue" | "dimgray" | "dodgerblue" | "firebrick" | "floralwhite" | "forestgreen" | "fuchsia" | "gainsboro" | "ghostwhite" | "gold" | "goldenrod" | "gray" | "green" | "greenyellow" | "honeydew" | "hotpink" | "indianred" | "indigo" | "ivory" | "khaki" | "lavender" | "lavenderblush" | "lawngreen" | "lemonchiffon" | "lightblue" | "lightcoral" | "lightcyan" | "lightgoldenrodyellow" | "lightgray" | "lightgreen" | "lightpink" | "lightsalmon" | "lightseagreen" | "lightskyblue" | "lightslategray" | "lightsteelblue" | "lightyellow" | "lime" | "limegreen" | "linen" | "magenta" | "maroon" | "mediumaquamarine" | "mediumblue" | "mediumorchid" | "mediumpurple" | "mediumseagreen" | "mediumslateblue" | "mediumspringgreen" | "mediumturquoise" | "mediumvioletred" | "midnightblue" | "mintcream" | "mistyrose" | "moccasin" | "navajowhite" | "navy" | "oldlace" | "olive" | "olivedrab" | "orange" | "orangered" | "orchid" | "palegoldenrod" | "palegreen" | "paleturquoise" | "palevioletred" | "papayawhip" | "peachpuff" | "peru" | "pink" | "plum" | "powderblue" | "purple" | "red" | "rosybrown" | "royalblue" | "saddlebrown" | "salmon" | "sandybrown" | "seagreen" | "seashell" | "sienna" | "silver" | "skyblue" | "slateblue" | "slategray" | "snow" | "springgreen" | "steelblue" | "tan" | "teal" | "thistle" | "tomato" | "turquoise" | "violet" | "wheat" | "white" | "whitesmoke" | "yellow" | "yellowgreen";
+
+declare class Vector2 {
+    x: number;
+    y: number;
+    constructor(x?: number, y?: number);
+    add(vec2: Vector2): Vector2;
+    subtract(vec2: Vector2): Vector2;
+    scale(scalar: number): Vector2;
+    dotProduct(vec2: Vector2): number;
+    crossProduct(vec2: Vector2): number;
+    vectorTo(point: Vector2): Vector2;
+    getNormal(): Vector2;
+    getMagnitude(): number;
+    angle(vec2: Vector2): number;
+    static add(vec1: Vector2, vec2: Vector2): Vector2;
+    static moveInDirectionFromPoint(start: Vector2, direction: number, distance: number): Vector2;
+    static rotateAroundCenter(center: Vector2, vec: Vector2, angle: number): Vector2;
+    static setAngleAroundCenter(center: Vector2, vec: Vector2, angle: number): Vector2;
+}
 
 type RenderArgs = {
     color?: Color;
@@ -106,6 +106,73 @@ declare namespace vector {
     function distance(vec1: Vector2, vec2: Vector2): number;
 }
 
+interface ITranslateable {
+    pos: Vector2;
+    mover: TranslationBehavior;
+}
+declare class TranslationBehavior {
+    private host;
+    constructor(host: {
+        pos: Vector2;
+    });
+    moveDirection(degrees: number, distance: number): void;
+    move(vec: Vector2): void;
+}
+
+interface IRotateable {
+    orientation: number;
+    rotator: RotateBehaviour;
+}
+declare class RotateBehaviour {
+    private host;
+    constructor(host: IRotateable);
+    rotate(degrees: number): void;
+    setRotation(degrees: number): void;
+}
+
+interface IMoveable extends ITranslateable, IRotateable {
+}
+
+interface ICollideable<Box extends HitBox = HitBox> extends IMoveable {
+    hitBox: Box;
+    collider: CollideableBehaviour;
+}
+declare class CollideableBehaviour {
+    private host;
+    translatedPoints: Vector2[];
+    alreadyTranslated: boolean;
+    constructor(host: ICollideable);
+    isCollidingWith(other: ICollideable): boolean;
+    translatePoints(): Vector2[];
+}
+
+interface IUpdateable {
+    update(deltatime: number): void;
+    shouldUpdate(): boolean;
+}
+
+interface IPreUpdateable extends IUpdateable {
+    preUpdate(deltaTime: number): void;
+}
+
+interface IRenderable {
+    render(renderer: Renderer): void;
+    shouldRender(): boolean;
+}
+
+interface IScaleable {
+    scale: number;
+    scaler: ScaleBehavior;
+}
+declare class ScaleBehavior {
+    private host;
+    constructor(host: {
+        scale: number;
+    });
+    scale(scalar: number): void;
+    setScale(scale: number): void;
+}
+
 declare namespace Collision {
     function testCollision(obj1: ICollideable, obj2: ICollideable): boolean;
     function isPointInside(obj: ICollideable, worldPoint: Vector2): boolean;
@@ -123,13 +190,12 @@ declare class Triangulation {
     private static isPointInTriangle;
 }
 
-declare abstract class HitBox {
+declare abstract class HitBox implements IScaleable {
     boundingRadius: number;
     isConvex: boolean;
-    current_scale: number;
+    scale: number;
+    scaler: ScaleBehavior;
     abstract translatePoints(pos: Vector2, orientation: number): Vector2[];
-    scale(scalar: number): void;
-    setScale(scale: number): void;
     abstract isPointInside(point: Vector2): boolean;
 }
 
@@ -139,8 +205,6 @@ declare class Circle extends HitBox {
     readonly isConvex: boolean;
     constructor(radius?: number);
     translatePoints(pos: Vector2, orientation: number): Vector2[];
-    scale(scalar: number): void;
-    setScale(scale: number): void;
     isPointInside(point: Vector2): boolean;
 }
 
@@ -153,8 +217,6 @@ declare class Polygon2 extends HitBox {
     private updateBoundingRadius;
     private findCenter;
     centerModel(): void;
-    scale(scalar: number): void;
-    setScale(scale: number): void;
     translatePoints(pos: Vector2, orientation: number): Vector2[];
     isPointInside(point: Vector2): boolean;
     static findArea(polygon: Polygon2): number;
@@ -174,29 +236,6 @@ declare class Triangle extends Polygon2 {
     constructor(p1: Vector2, p2: Vector2, p3: Vector2);
 }
 
-interface IMoveable {
-    pos: Vector2;
-    moveDirection(degrees: number, distance: number): void;
-    move(translation_vec: Vector2): void;
-}
-
-interface ICollideable extends IMoveable {
-    hitBox: HitBox;
-    orientation: number;
-    translatedPoints: Vector2[];
-    alreadyTranslated: boolean;
-    translatePoints(): Vector2[];
-}
-
-interface IUpdateable {
-    update(deltatime: number): void;
-    shouldUpdate(): boolean;
-}
-
-interface IPreUpdateable extends IUpdateable {
-    preUpdate(deltaTime: number): void;
-}
-
 declare class Zoom {
     activated: boolean;
     faktor: number;
@@ -212,15 +251,16 @@ declare class Zoom {
     disable(): void;
 }
 
-declare class Camera implements ICollideable {
+declare class Camera implements ICollideable<HitBox>, IMoveable {
     pos: Vector2;
-    lockMovement: boolean;
+    hitBox: Rectangle;
     orientation: number;
-    hitBox: HitBox;
+    collider: CollideableBehaviour;
+    mover: TranslationBehavior;
+    rotator: RotateBehaviour;
+    lockMovement: boolean;
     protected zoom: Zoom;
     constructor(width: number, height: number);
-    move(translation_vec: Vector2): void;
-    moveDirection(degrees: number, distance: number): void;
     rotate(degrees: number): void;
     translatedPoints: Vector2[];
     alreadyTranslated: boolean;
@@ -252,24 +292,20 @@ declare class CanvasRenderer extends Renderer {
     renderRectangle(pos: Vector2, pos2: Vector2, args?: RenderArgs): void;
 }
 
-interface IRenderable {
-    render(renderer: Renderer): void;
-    shouldRender(): boolean;
-}
-
 declare abstract class SceneObject implements IUpdateable {
     abstract update(deltaTime: number): void;
     abstract shouldUpdate(): boolean;
 }
 
-declare abstract class GameObject extends SceneObject implements IRenderable, IMoveable {
-    readonly pos: Vector2;
+declare abstract class GameObject extends SceneObject implements IMoveable, IRenderable {
+    abstract pos: Vector2;
+    mover: TranslationBehavior;
+    orientation: number;
+    rotator: RotateBehaviour;
     abstract update(deltaTime: number): void;
     shouldUpdate(): boolean;
     abstract render(renderer: Renderer): void;
     shouldRender(): boolean;
-    moveDirection(degrees: number, distance: number): void;
-    move(translation_vec: Vector2): void;
 }
 
 declare class Scene {
@@ -363,4 +399,4 @@ declare const Util: {
     object: typeof object;
 };
 
-export { Camera, Canvas, CanvasCamera, CanvasRenderer, Circle, Collision, Color, ControllableObject, GameLoop, GameManager, GameObject, HitBox, type ICollideable, type IMoveable, type IPreUpdateable, type IRenderable, type IUpdateable, Input, Matrix2, Polygon2, type PolygonWinding, RealTimeManager, Rectangle, type RenderArgs, Renderer, SAT, Scene, SceneObject, Thread, Triangle, Triangulation, TurnBasedManager, TwoKeyMap, Util, Vector2, Zoom, type inputKey, math, vector };
+export { Camera, Canvas, CanvasCamera, CanvasRenderer, Circle, CollideableBehaviour, Collision, Color, ControllableObject, GameLoop, GameManager, GameObject, HitBox, type ICollideable, type IMoveable, type IPreUpdateable, type IRenderable, type IRotateable, type IScaleable, type ITranslateable, type IUpdateable, Input, Matrix2, Polygon2, type PolygonWinding, RealTimeManager, Rectangle, type RenderArgs, Renderer, RotateBehaviour, SAT, ScaleBehavior, Scene, SceneObject, Thread, TranslationBehavior, Triangle, Triangulation, TurnBasedManager, TwoKeyMap, Util, Vector2, Zoom, type inputKey, math, vector };

@@ -25,28 +25,32 @@ __export(index_exports, {
   CanvasCamera: () => CanvasCamera,
   CanvasRenderer: () => CanvasRenderer,
   Circle: () => Circle,
+  CollideableBehaviour: () => CollideableBehaviour,
   Collision: () => Collision,
   Color: () => Color,
   ControllableObject: () => ControllableObject,
   GameLoop: () => GameLoop,
   GameManager: () => GameManager,
   GameObject: () => GameObject,
-  HitBox: () => HitBox,
+  HitBox: () => HitBox2,
   Input: () => Input,
   Matrix2: () => Matrix2,
   Polygon2: () => Polygon2,
   RealTimeManager: () => RealTimeManager,
   Rectangle: () => Rectangle,
   Renderer: () => Renderer,
+  RotateBehaviour: () => RotateBehaviour,
   SAT: () => SAT,
+  ScaleBehavior: () => ScaleBehavior,
   Scene: () => Scene,
   SceneObject: () => SceneObject,
   Thread: () => Thread,
+  TranslationBehavior: () => TranslationBehavior,
   Triangle: () => Triangle,
   Triangulation: () => Triangulation,
   TurnBasedManager: () => TurnBasedManager,
   TwoKeyMap: () => TwoKeyMap,
-  Util: () => Util10,
+  Util: () => Util8,
   Vector2: () => Vector2,
   Zoom: () => Zoom,
   math: () => math,
@@ -560,23 +564,76 @@ var vector;
 // ts/engine/physic/algorithms/Collision.ts
 var import_util6 = require("util");
 
-// ts/engine/physic/boundingBox/HitBox.ts
-var HitBox = class {
-  // quick access vars (need to set at initialization)
-  boundingRadius;
-  isConvex;
-  current_scale = 1;
-  // scale the hitbox
-  scale(scalar) {
-    this.current_scale *= scalar;
+// ts/engine/propertys/ICollideable.ts
+var CollideableBehaviour = class {
+  constructor(host) {
+    this.host = host;
   }
-  setScale(scale) {
-    this.current_scale = scale;
+  translatedPoints = [];
+  alreadyTranslated = false;
+  isCollidingWith(other) {
+    return Collision.testCollision(this.host, other);
+  }
+  translatePoints() {
+    return this.host.hitBox.translatePoints(this.host.pos, this.host.orientation);
   }
 };
 
+// ts/engine/propertys/IRotateable.ts
+var RotateBehaviour = class {
+  constructor(host) {
+    this.host = host;
+  }
+  rotate(degrees) {
+    this.host.orientation += degrees;
+    this.host.orientation %= 360;
+  }
+  setRotation(degrees) {
+    this.host.orientation = degrees % 360;
+  }
+};
+
+// ts/engine/propertys/IScaleable.ts
+var ScaleBehavior = class {
+  constructor(host) {
+    this.host = host;
+  }
+  scale(scalar) {
+    this.host.scale *= scalar;
+  }
+  setScale(scale) {
+    this.host.scale = scale;
+  }
+};
+
+// ts/engine/propertys/ITranslateable.ts
+var TranslationBehavior = class {
+  constructor(host) {
+    this.host = host;
+  }
+  moveDirection(degrees, distance) {
+    const radians = degrees * Math.PI / 180;
+    const dx = Math.cos(radians) * distance;
+    const dy = Math.sin(radians) * distance;
+    this.move(new Vector2(dx, dy));
+  }
+  move(vec) {
+    this.host.pos.x += vec.x;
+    this.host.pos.y += vec.y;
+  }
+};
+
+// ts/engine/physic/boundingBox/HitBox.ts
+var HitBox2 = class {
+  // quick access vars (need to set at initialization)
+  boundingRadius;
+  isConvex;
+  scale = 1;
+  scaler = new ScaleBehavior(this);
+};
+
 // ts/engine/physic/boundingBox/Circle.ts
-var Circle = class extends HitBox {
+var Circle = class extends HitBox2 {
   radius;
   // quick access vars (need to set at initialization)
   boundingRadius;
@@ -595,14 +652,6 @@ var Circle = class extends HitBox {
       Vector2.moveInDirectionFromPoint(pos, 360 - orientation, this.radius)
     ];
   }
-  scale(scalar) {
-    super.scale(scalar);
-    this.radius *= scalar;
-  }
-  setScale(scale) {
-    this.radius /= this.current_scale;
-    super.setScale(scale);
-  }
   isPointInside(point) {
     return point.getMagnitude() <= this.radius;
   }
@@ -619,8 +668,8 @@ var SAT = class {
    * Returns false if a gap is found - else true
    */
   static areColliding(polygon1, polygon2) {
-    const points1 = polygon1.translatePoints();
-    const points2 = polygon2.translatePoints();
+    const points1 = polygon1.collider.translatePoints();
+    const points2 = polygon2.collider.translatePoints();
     let lastPoint = points1[points1.length - 1];
     for (let i = 0; i < points1.length; i++) {
       const point = points1[i];
@@ -651,7 +700,7 @@ var import_util5 = require("util");
 
 // ts/engine/physic/boundingBox/Polygon2.ts
 var import_util4 = require("util");
-var Polygon2 = class _Polygon2 extends HitBox {
+var Polygon2 = class _Polygon2 extends HitBox2 {
   // points relative to a (0|0) center with 0° rotation
   model = new Array();
   // quick access vars (need to set at initialization)
@@ -688,14 +737,6 @@ var Polygon2 = class _Polygon2 extends HitBox {
   }
   // ==========================================================================================
   // from Super classes
-  scale(scalar) {
-    super.scale(scalar);
-    this.model = this.model.map((p) => p.scale(scalar));
-  }
-  setScale(scale) {
-    this.model = this.model.map((p) => p.scale(1 / this.current_scale));
-    super.setScale(scale);
-  }
   translatePoints(pos, orientation) {
     return this.model.map((p) => Vector2.setAngleAroundCenter(pos, p.add(pos), orientation));
   }
@@ -826,6 +867,9 @@ var Triangulation = class _Triangulation {
 };
 var Ear = class {
   pos;
+  mover = new TranslationBehavior(this);
+  collider = new CollideableBehaviour(this);
+  rotator = new RotateBehaviour(this);
   hitBox;
   orientation;
   constructor(pos, hitBox, orientation = 0) {
@@ -841,26 +885,13 @@ var Ear = class {
     this.alreadyTranslated = true;
     return this.translatedPoints;
   }
-  move(translation_vec) {
-    this.pos.x += translation_vec.x;
-    this.pos.y += translation_vec.y;
-    this.alreadyTranslated = false;
-  }
-  moveDirection(degrees, distance) {
-    const rad = import_util5.Util.math.convert.DegToRad(degrees);
-    const dx = Math.cos(rad) * distance;
-    const dy = Math.sin(rad) * distance;
-    this.pos.x += dx;
-    this.pos.y += dy;
-    this.alreadyTranslated = false;
-  }
 };
 
 // ts/engine/physic/algorithms/Collision.ts
 var Collision;
 ((Collision2) => {
   function testCollision(obj1, obj2) {
-    [obj1, obj2].forEach((obj) => obj.translatePoints());
+    [obj1, obj2].forEach((obj) => obj.collider.translatePoints());
     if (obj1.hitBox instanceof Circle || obj2.hitBox instanceof Circle) {
       return potentialCollision(obj1, obj2);
     }
@@ -920,9 +951,6 @@ var Rectangle = class extends Polygon2 {
   }
 };
 
-// ts/engine/display/camera/Camera.ts
-var import_util7 = require("util");
-
 // ts/engine/display/camera/Zoom.ts
 var Zoom = class {
   activated = true;
@@ -967,25 +995,15 @@ var Zoom = class {
 // ts/engine/display/camera/Camera.ts
 var Camera = class {
   pos = new Vector2();
-  lockMovement = false;
-  orientation = 0;
   hitBox;
+  orientation = 0;
+  collider = new CollideableBehaviour(this);
+  mover = new TranslationBehavior(this);
+  rotator = new RotateBehaviour(this);
+  lockMovement = false;
   zoom = new Zoom();
   constructor(width, height) {
     this.hitBox = new Rectangle(width, height);
-  }
-  move(translation_vec) {
-    this.pos.x += translation_vec.x;
-    this.pos.y += translation_vec.y;
-    this.alreadyTranslated = false;
-  }
-  moveDirection(degrees, distance) {
-    const rad = import_util7.Util.math.convert.DegToRad(degrees);
-    const dx = Math.cos(rad) * distance;
-    const dy = Math.sin(rad) * distance;
-    this.pos.x += dx;
-    this.pos.y += dy;
-    this.alreadyTranslated = false;
   }
   rotate(degrees) {
     this.orientation += degrees;
@@ -996,7 +1014,7 @@ var Camera = class {
   alreadyTranslated = false;
   translatePoints() {
     if (this.alreadyTranslated) return this.translatedPoints;
-    this.hitBox.setScale(1 / this.zoom.currentZoom);
+    this.hitBox.scaler.setScale(1 / this.zoom.currentZoom);
     this.translatedPoints = this.hitBox.translatePoints(this.pos, this.orientation);
     this.alreadyTranslated = true;
     return this.translatedPoints;
@@ -1007,7 +1025,7 @@ var Camera = class {
 };
 
 // ts/input/Input.ts
-var import_util8 = require("util");
+var import_util7 = require("util");
 var keys = /* @__PURE__ */ new Map([
   ["a", "a"],
   ["b", "b"],
@@ -1098,7 +1116,7 @@ var Input = class _Input {
     const listener = _Input.eventListener.get(event);
     if (!listener) return;
     for (let lis of listener) {
-      if (lis.obj == obj) import_util8.Util.array.removeItem(listener, lis);
+      if (lis.obj == obj) import_util7.Util.array.removeItem(listener, lis);
     }
   }
   static notifyOfEvent(event) {
@@ -1118,7 +1136,7 @@ var Input = class _Input {
   static keyUp(key) {
     if (!key) return;
     if (this.pressedKeys.includes(key)) {
-      import_util8.Util.array.removeItem(this.pressedKeys, key);
+      import_util7.Util.array.removeItem(this.pressedKeys, key);
     }
   }
   static getInputKey(key) {
@@ -1236,25 +1254,15 @@ var SceneObject = class {
 };
 
 // ts/engine/entities/GameObject.ts
-var import_util9 = require("util");
 var GameObject = class extends SceneObject {
-  pos = new Vector2();
+  mover = new TranslationBehavior(this);
+  orientation = 0;
+  rotator = new RotateBehaviour(this);
   shouldUpdate() {
     return true;
   }
   shouldRender() {
     return true;
-  }
-  moveDirection(degrees, distance) {
-    const rad = import_util9.Util.math.convert.DegToRad(degrees);
-    const dx = Math.cos(rad) * distance;
-    const dy = Math.sin(rad) * distance;
-    this.pos.x += dx;
-    this.pos.y += dy;
-  }
-  move(translation_vec) {
-    this.pos.x += translation_vec.x;
-    this.pos.y += translation_vec.y;
   }
 };
 
@@ -1430,7 +1438,7 @@ var object;
 })(object || (object = {}));
 
 // ts/util/index.ts
-var Util10 = {
+var Util8 = {
   ...object_util_exports,
   ...math_util_exports,
   ...vector_util_exports
@@ -1442,6 +1450,7 @@ var Util10 = {
   CanvasCamera,
   CanvasRenderer,
   Circle,
+  CollideableBehaviour,
   Collision,
   Color,
   ControllableObject,
@@ -1455,10 +1464,13 @@ var Util10 = {
   RealTimeManager,
   Rectangle,
   Renderer,
+  RotateBehaviour,
   SAT,
+  ScaleBehavior,
   Scene,
   SceneObject,
   Thread,
+  TranslationBehavior,
   Triangle,
   Triangulation,
   TurnBasedManager,
