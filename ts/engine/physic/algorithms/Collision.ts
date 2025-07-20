@@ -8,7 +8,7 @@ import { Triangulation } from "./Triangulation";
 
 export namespace Collision {
   export function testCollision(obj1: ICollideable, obj2: ICollideable): boolean {
-    [obj1, obj2].forEach((obj) => obj.translatePoints());
+    [obj1, obj2].forEach((obj) => obj.collider.translatePoints());
 
     if (obj1.hitBox instanceof Circle || obj2.hitBox instanceof Circle) {
       return potentialCollision(obj1, obj2);

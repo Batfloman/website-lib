@@ -13,8 +13,8 @@ export class SAT {
    * Returns false if a gap is found - else true
    */
   private static areColliding(polygon1: ICollideable, polygon2: ICollideable) {
-    const points1 = polygon1.translatePoints();
-    const points2 = polygon2.translatePoints();
+    const points1 = polygon1.collider.translatePoints();
+    const points2 = polygon2.collider.translatePoints();
 
     let lastPoint = points1[points1.length - 1];
 

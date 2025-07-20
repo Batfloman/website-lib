@@ -1,6 +1,7 @@
 import { Util } from "util";
 import { Vector2 } from "math";
-import { ICollideable } from "engine/propertys";
+import { CollideableBehaviour, ICollideable, RotateBehaviour } from "engine/propertys";
+import { TranslationBehavior } from "engine/propertys/ITranslateable";
 import { Polygon2 } from "../boundingBox/Polygon2";
 import { Triangle } from "../boundingBox/Triangle";
 
@@ -86,6 +87,9 @@ export class Triangulation {
 
 class Ear implements ICollideable {
   pos: Vector2;
+  mover: TranslationBehavior = new TranslationBehavior(this);
+  collider: CollideableBehaviour = new CollideableBehaviour(this);
+  rotator: RotateBehaviour = new RotateBehaviour(this);
   hitBox: Triangle;
   orientation: number;
 
@@ -104,20 +108,5 @@ class Ear implements ICollideable {
     this.translatedPoints = this.hitBox.translatePoints(this.pos, this.orientation);
     this.alreadyTranslated = true
     return this.translatedPoints;
-  }
-  move(translation_vec: Vector2): void {
-    this.pos.x += translation_vec.x
-    this.pos.y += translation_vec.y
-
-    this.alreadyTranslated = false;
-  }
-  moveDirection(degrees: number, distance: number): void {
-    const rad = Util.math.convert.DegToRad(degrees)
-    const dx = Math.cos(rad) * distance;
-    const dy = Math.sin(rad) * distance;
-    this.pos.x += dx;
-    this.pos.y += dy;
-
-    this.alreadyTranslated = false;
   }
 }
