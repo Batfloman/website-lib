@@ -23,14 +23,6 @@ export class Circle extends HitBox {
       Vector2.moveInDirectionFromPoint(pos, 360 - orientation, this.radius),
     ]
   }
-  scale(scalar: number): void {
-    super.scale(scalar)
-    this.radius *= scalar;
-  }
-  setScale(scale: number): void {
-    this.radius /= this.current_scale
-    super.setScale(scale);
-  }
 
   isPointInside(point: Vector2): boolean {
     return point.getMagnitude() <= this.radius;

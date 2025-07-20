@@ -55,15 +55,6 @@ export class Polygon2 extends HitBox {
   // ==========================================================================================
   // from Super classes
 
-  scale(scalar: number): void {
-    super.scale(scalar);
-    this.model = this.model.map(p => p.scale(scalar));
-  }
-  setScale(scale: number): void {
-    this.model = this.model.map(p => p.scale(1 / this.current_scale));
-    super.setScale(scale);
-  }
-
   translatePoints(pos: Vector2, orientation: number): Vector2[] {
     return this.model.map(p => Vector2.setAngleAroundCenter(pos, p.add(pos), orientation));
   }
