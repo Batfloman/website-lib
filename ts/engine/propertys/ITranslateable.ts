@@ -21,4 +21,3 @@ export class TranslationBehavior {
 		this.host.pos.y += vec.y;
 	}
 }
-

@@ -1,7 +1,7 @@
 import { Collision, HitBox, Rectangle } from "engine/physic";
 import { CollideableBehaviour, ICollideable, IMoveable, RotateBehaviour, TranslationBehavior } from "engine/propertys";
 import { Vector2 } from "math";
-import { Util } from "util";
+import { Util } from "myutil";
 import { Zoom } from "./Zoom";
 
 export class Camera implements ICollideable<HitBox>, IMoveable {

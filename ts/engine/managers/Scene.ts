@@ -1,5 +1,5 @@
-import { GameObject } from "../entities/GameObject"
 import { Renderer } from "engine/display";
+import { GameObject } from "../entities/GameObject";
 
 export class Scene {
 	private objects: Set<GameObject> = new Set();

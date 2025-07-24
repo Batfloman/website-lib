@@ -1,4 +1,4 @@
-import { Util } from "util";
+import { Util } from "myutil";
 
 export class Color {
   static none = new Color(0, 0, 0, 0);

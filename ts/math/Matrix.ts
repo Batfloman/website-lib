@@ -1,4 +1,4 @@
-import { Util } from "util";
+import { Util } from "myutil";
 
 export class Matrix2<T> {
   private cells: Array<Array<T | string>>;

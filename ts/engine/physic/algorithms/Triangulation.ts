@@ -1,4 +1,4 @@
-import { Util } from "util";
+import { Util } from "myutil";
 import { Vector2 } from "math";
 import { CollideableBehaviour, ICollideable, RotateBehaviour } from "engine/propertys";
 import { TranslationBehavior } from "engine/propertys/ITranslateable";

@@ -1,5 +1,5 @@
 import { Vector2 } from "math";
-import { Util } from "util";
+import { Util } from "myutil";
 import { HitBox } from "./HitBox";
 
 export type PolygonWinding = "clockwise" | "counterclockwise";

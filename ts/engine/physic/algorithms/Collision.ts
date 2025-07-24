@@ -1,5 +1,5 @@
 import { Vector2 } from "math";
-import { Util } from "util";
+import { Util } from "myutil";
 import { Circle } from "../boundingBox/Circle";
 
 import { ICollideable } from "engine/propertys";
