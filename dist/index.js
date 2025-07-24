@@ -96,8 +96,217 @@ var TurnBasedManager = class extends GameManager {
   }
 };
 
+// ts/myutil/object_util.ts
+var object_util_exports = {};
+__export(object_util_exports, {
+  array: () => array,
+  map: () => map,
+  object: () => object
+});
+var array;
+((array2) => {
+  function getItemCyclic(arr, index) {
+    const wrappedIndex = (index % arr.length + arr.length) % arr.length;
+    return arr[wrappedIndex];
+  }
+  array2.getItemCyclic = getItemCyclic;
+  function getLastItem(arr) {
+    return arr[-1];
+  }
+  array2.getLastItem = getLastItem;
+  function getRandomItem(arr) {
+    const randomIndex = Math.floor(Math.random() * arr.length);
+    return arr[randomIndex];
+  }
+  array2.getRandomItem = getRandomItem;
+  function removeItemAtIndex(arr, index) {
+    if (index < 0 || index >= arr.length) throw new Error(`${index} is not Valid!`);
+    return arr.splice(index, 1)[0];
+  }
+  array2.removeItemAtIndex = removeItemAtIndex;
+  function removeItem(arr, item) {
+    if (!arr.includes(item)) return void 0;
+    return arr.splice(arr.indexOf(item), 1)[0];
+  }
+  array2.removeItem = removeItem;
+  function sum(arr) {
+    return arr.reduce((a, b) => a += isNaN(b) ? 0 : b);
+  }
+  array2.sum = sum;
+  function isEmpty(arr) {
+    return !arr || arr.length === 0;
+  }
+  array2.isEmpty = isEmpty;
+  function copyOf(arr) {
+    return [...arr];
+  }
+  array2.copyOf = copyOf;
+  function connectArrays(arrays) {
+    let connected = [];
+    for (let arr of arrays) {
+      connected = connected.concat(arr);
+    }
+    return connected;
+  }
+  array2.connectArrays = connectArrays;
+})(array || (array = {}));
+var map;
+((map2) => {
+  function copyOf(map3) {
+    var newMap = /* @__PURE__ */ new Map();
+    for (let [key, value] of map3.entries()) {
+      newMap.set(key, value);
+    }
+    return newMap;
+  }
+  map2.copyOf = copyOf;
+})(map || (map = {}));
+var object;
+((object2) => {
+  function findClassName(clas) {
+    return clas instanceof Function ? clas.name : clas.constructor.name;
+  }
+  object2.findClassName = findClassName;
+  function findSuperClassName(clas) {
+    return clas instanceof Function ? Object.getPrototypeOf(clas).name : Object.getPrototypeOf(Object.getPrototypeOf(clas)).constructor.name;
+  }
+  object2.findSuperClassName = findSuperClassName;
+  function findClass(clas) {
+    return clas instanceof Function ? clas : Object.getPrototypeOf(clas).constructor;
+  }
+  object2.findClass = findClass;
+  function findSuperClass(clas) {
+    return clas instanceof Function ? Object.getPrototypeOf(clas) : Object.getPrototypeOf(Object.getPrototypeOf(clas)).constructor;
+  }
+  object2.findSuperClass = findSuperClass;
+  function findAllClassNames(clas) {
+    const superClasses = [];
+    let currentClass = object2.findClass(clas);
+    while (currentClass.name != "") {
+      superClasses.push(currentClass.name);
+      currentClass = object2.findSuperClass(currentClass);
+    }
+    return superClasses;
+  }
+  object2.findAllClassNames = findAllClassNames;
+  function findAllClasses(clas) {
+    const superClasses = [];
+    let currentClass = object2.findClass(clas);
+    while (currentClass.name != "") {
+      superClasses.push(currentClass);
+      currentClass = object2.findSuperClass(currentClass);
+    }
+    return superClasses;
+  }
+  object2.findAllClasses = findAllClasses;
+  function findAllSuperClassNames(clas) {
+    const superClasses = [];
+    let currentClass = object2.findSuperClass(clas);
+    while (currentClass.name != "") {
+      superClasses.push(currentClass.name);
+      currentClass = object2.findSuperClass(currentClass);
+    }
+    return superClasses;
+  }
+  object2.findAllSuperClassNames = findAllSuperClassNames;
+  function findAllSuperClasses(clas) {
+    const superClasses = [];
+    let currentClass = object2.findSuperClass(clas);
+    while (currentClass.name != "") {
+      superClasses.push(currentClass);
+      currentClass = object2.findSuperClass(currentClass);
+    }
+    return superClasses;
+  }
+  object2.findAllSuperClasses = findAllSuperClasses;
+})(object || (object = {}));
+
+// ts/math/math_util.ts
+var math_util_exports = {};
+__export(math_util_exports, {
+  math: () => math
+});
+var math;
+((math2) => {
+  function round(x, num_decimals = 0) {
+    const factor = Math.pow(10, num_decimals);
+    return Math.round(x * factor) / factor;
+  }
+  math2.round = round;
+  function floor(x, num_decimals = 0) {
+    const factor = Math.pow(10, num_decimals);
+    return Math.floor(x * factor) / factor;
+  }
+  math2.floor = floor;
+  function ceil(x, num_decimals = 0) {
+    const factor = Math.pow(10, num_decimals);
+    return Math.ceil(x * factor) / factor;
+  }
+  math2.ceil = ceil;
+  let random;
+  ((random2) => {
+    function between(start, end, num_decimals = 0) {
+      return round(Math.random() * (end - start) + start, num_decimals);
+    }
+    random2.between = between;
+    function sign() {
+      return Math.random() > 0.5 ? 1 : -1;
+    }
+    random2.sign = sign;
+  })(random = math2.random || (math2.random = {}));
+  let trigonometry;
+  ((trigonometry2) => {
+    function cos(degree) {
+      return Math.cos(convert.DegToRad(degree));
+    }
+    trigonometry2.cos = cos;
+    function arccos(num) {
+      return convert.RadToDeg(Math.acos(num));
+    }
+    trigonometry2.arccos = arccos;
+  })(trigonometry = math2.trigonometry || (math2.trigonometry = {}));
+  let convert;
+  ((convert2) => {
+    function DegToRad(degree) {
+      return degree * Math.PI / 180;
+    }
+    convert2.DegToRad = DegToRad;
+    function RadToDeg(rad) {
+      return 180 * rad / Math.PI;
+    }
+    convert2.RadToDeg = RadToDeg;
+    function percent(percent2, value = 1) {
+      if (typeof percent2 === "string") {
+        percent2 = parseFloat(percent2);
+        if (isNaN(percent2)) throw new Error(`${percent2} contains no number`);
+      }
+      return percent2 / 100 * value;
+    }
+    convert2.percent = percent;
+  })(convert = math2.convert || (math2.convert = {}));
+})(math || (math = {}));
+
+// ts/math/vector_util.ts
+var vector_util_exports = {};
+__export(vector_util_exports, {
+  vector: () => vector
+});
+var vector;
+((vector2) => {
+  function distance(vec1, vec2) {
+    return vec1.subtract(vec2).getMagnitude();
+  }
+  vector2.distance = distance;
+})(vector || (vector = {}));
+
+// ts/myutil/index.ts
+var Util = {
+  ...object_util_exports,
+  ...math_util_exports,
+  ...vector_util_exports
+};
+
 // ts/engine/display/Color.ts
-import { Util } from "util";
 var Color = class _Color {
   static none = new _Color(0, 0, 0, 0);
   r = 0;
@@ -303,7 +512,6 @@ var Renderer = class {
 };
 
 // ts/math/Matrix.ts
-import { Util as Util2 } from "util";
 var Matrix2 = class {
   cells;
   xSize;
@@ -328,8 +536,8 @@ var Matrix2 = class {
   }
   get(x, y) {
     const yIndex = this.ySize - y - 1;
-    const xarr = Util2.array.getItemCyclic(this.cells, yIndex);
-    return Util2.array.getItemCyclic(xarr, x);
+    const xarr = Util.array.getItemCyclic(this.cells, yIndex);
+    return Util.array.getItemCyclic(xarr, x);
   }
   set(x, y, content) {
     if (x < 0 || x >= this.getSizeX()) {
@@ -352,7 +560,6 @@ var Matrix2 = class {
 };
 
 // ts/math/Vector2.ts
-import { Util as Util3 } from "util";
 var Vector2 = class _Vector2 {
   x;
   y;
@@ -385,7 +592,7 @@ var Vector2 = class _Vector2 {
     return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
   }
   angle(vec2) {
-    const angleBetween = Util3.math.trigonometry.arccos(
+    const angleBetween = Util.math.trigonometry.arccos(
       this.dotProduct(vec2) / (this.getMagnitude() * vec2.getMagnitude())
     );
     if (isNaN(angleBetween)) return 0;
@@ -397,7 +604,7 @@ var Vector2 = class _Vector2 {
     return new _Vector2(vec1.x + vec2.x, vec1.y + vec2.y);
   }
   static moveInDirectionFromPoint(start, direction, distance) {
-    direction = Util3.math.convert.DegToRad(direction);
+    direction = Util.math.convert.DegToRad(direction);
     const dx = Math.cos(direction) * distance;
     const dy = Math.sin(direction) * distance;
     return new _Vector2(start.x + dx, start.y + dy);
@@ -428,87 +635,6 @@ var Vector2 = class _Vector2 {
     return newRel.add(center);
   }
 };
-
-// ts/math/math_util.ts
-var math_util_exports = {};
-__export(math_util_exports, {
-  math: () => math
-});
-var math;
-((math2) => {
-  function round(x, num_decimals = 0) {
-    const factor = Math.pow(10, num_decimals);
-    return Math.round(x * factor) / factor;
-  }
-  math2.round = round;
-  function floor(x, num_decimals = 0) {
-    const factor = Math.pow(10, num_decimals);
-    return Math.floor(x * factor) / factor;
-  }
-  math2.floor = floor;
-  function ceil(x, num_decimals = 0) {
-    const factor = Math.pow(10, num_decimals);
-    return Math.ceil(x * factor) / factor;
-  }
-  math2.ceil = ceil;
-  let random;
-  ((random2) => {
-    function between(start, end, num_decimals = 0) {
-      return round(Math.random() * (end - start) + start, num_decimals);
-    }
-    random2.between = between;
-    function sign() {
-      return Math.random() > 0.5 ? 1 : -1;
-    }
-    random2.sign = sign;
-  })(random = math2.random || (math2.random = {}));
-  let trigonometry;
-  ((trigonometry2) => {
-    function cos(degree) {
-      return Math.cos(convert.DegToRad(degree));
-    }
-    trigonometry2.cos = cos;
-    function arccos(num) {
-      return convert.RadToDeg(Math.acos(num));
-    }
-    trigonometry2.arccos = arccos;
-  })(trigonometry = math2.trigonometry || (math2.trigonometry = {}));
-  let convert;
-  ((convert2) => {
-    function DegToRad(degree) {
-      return degree * Math.PI / 180;
-    }
-    convert2.DegToRad = DegToRad;
-    function RadToDeg(rad) {
-      return 180 * rad / Math.PI;
-    }
-    convert2.RadToDeg = RadToDeg;
-    function percent(percent2, value = 1) {
-      if (typeof percent2 === "string") {
-        percent2 = parseFloat(percent2);
-        if (isNaN(percent2)) throw new Error(`${percent2} contains no number`);
-      }
-      return percent2 / 100 * value;
-    }
-    convert2.percent = percent;
-  })(convert = math2.convert || (math2.convert = {}));
-})(math || (math = {}));
-
-// ts/math/vector_util.ts
-var vector_util_exports = {};
-__export(vector_util_exports, {
-  vector: () => vector
-});
-var vector;
-((vector2) => {
-  function distance(vec1, vec2) {
-    return vec1.subtract(vec2).getMagnitude();
-  }
-  vector2.distance = distance;
-})(vector || (vector = {}));
-
-// ts/engine/physic/algorithms/Collision.ts
-import { Util as Util6 } from "util";
 
 // ts/engine/propertys/ICollideable.ts
 var CollideableBehaviour = class {
@@ -641,11 +767,7 @@ var SAT = class {
   }
 };
 
-// ts/engine/physic/algorithms/Triangulation.ts
-import { Util as Util5 } from "util";
-
 // ts/engine/physic/boundingBox/Polygon2.ts
-import { Util as Util4 } from "util";
 var Polygon2 = class _Polygon2 extends HitBox2 {
   // points relative to a (0|0) center with 0° rotation
   model = new Array();
@@ -695,7 +817,7 @@ var Polygon2 = class _Polygon2 extends HitBox2 {
     let area = 0;
     for (let i = 0; i < polygon.model.length; i++) {
       const a = polygon.model[i];
-      const b = Util4.array.getItemCyclic(polygon.model, i + 1);
+      const b = Util.array.getItemCyclic(polygon.model, i + 1);
       area += a.x * b.y;
       area -= a.y * b.x;
     }
@@ -708,9 +830,9 @@ var Polygon2 = class _Polygon2 extends HitBox2 {
     if (polygon.model.length <= 3) return true;
     const winding = _Polygon2.findWinding(polygon);
     for (let i = 0; i < polygon.model.length; i++) {
-      const a = Util4.array.getItemCyclic(polygon.model, i - 1);
+      const a = Util.array.getItemCyclic(polygon.model, i - 1);
       const b = polygon.model[i];
-      const c = Util4.array.getItemCyclic(polygon.model, i + 1);
+      const c = Util.array.getItemCyclic(polygon.model, i + 1);
       const ba = a.subtract(b);
       const bc = c.subtract(b);
       if (!_Polygon2.isConvex(winding, ba.crossProduct(bc))) return false;
@@ -729,7 +851,7 @@ var Polygon2 = class _Polygon2 extends HitBox2 {
     const winding = _Polygon2.findWinding(polygon);
     for (let i = 0; i < polygon.model.length; i++) {
       const a = polygon.model[i];
-      const b = Util4.array.getItemCyclic(polygon.model, i - 1);
+      const b = Util.array.getItemCyclic(polygon.model, i - 1);
       const a_to_b = b.subtract(a);
       const a_to_p = point.subtract(a);
       const cross = a_to_b.crossProduct(a_to_p);
@@ -767,9 +889,9 @@ var Triangulation = class _Triangulation {
     }
     while (indexList.length > 3) {
       for (let i = 0; i < indexList.length; i++) {
-        const i1 = Util5.array.getItemCyclic(indexList, i - 1);
+        const i1 = Util.array.getItemCyclic(indexList, i - 1);
         const i2 = indexList[i];
-        const i3 = Util5.array.getItemCyclic(indexList, i + 1);
+        const i3 = Util.array.getItemCyclic(indexList, i + 1);
         const va = vertices[i1];
         const vb = vertices[i2];
         const vc = vertices[i3];
@@ -788,7 +910,7 @@ var Triangulation = class _Triangulation {
         if (!isEar) continue;
         const ear = new Ear(obj.pos, new Triangle(va, vb, vc), obj.orientation);
         ears.push(ear);
-        Util5.array.removeItemAtIndex(indexList, i);
+        Util.array.removeItemAtIndex(indexList, i);
         break;
       }
     }
@@ -874,7 +996,7 @@ var Collision;
   }
   Collision2.potentialCollision = potentialCollision;
   function circleCollision(c1, r1, c2, r2) {
-    return Util6.vector.distance(c1, c2) < r1 + r2;
+    return Util.vector.distance(c1, c2) < r1 + r2;
   }
   Collision2.circleCollision = circleCollision;
 })(Collision || (Collision = {}));
@@ -971,7 +1093,6 @@ var Camera = class {
 };
 
 // ts/input/Input.ts
-import { Util as Util7 } from "util";
 var keys = /* @__PURE__ */ new Map([
   ["a", "a"],
   ["b", "b"],
@@ -1062,7 +1183,7 @@ var Input = class _Input {
     const listener = _Input.eventListener.get(event);
     if (!listener) return;
     for (let lis of listener) {
-      if (lis.obj == obj) Util7.array.removeItem(listener, lis);
+      if (lis.obj == obj) Util.array.removeItem(listener, lis);
     }
   }
   static notifyOfEvent(event) {
@@ -1082,7 +1203,7 @@ var Input = class _Input {
   static keyUp(key) {
     if (!key) return;
     if (this.pressedKeys.includes(key)) {
-      Util7.array.removeItem(this.pressedKeys, key);
+      Util.array.removeItem(this.pressedKeys, key);
     }
   }
   static getInputKey(key) {
@@ -1257,138 +1378,6 @@ var Thread = class {
     window.URL.revokeObjectURL(this.blobURL);
   }
 };
-
-// ts/util/object_util.ts
-var object_util_exports = {};
-__export(object_util_exports, {
-  array: () => array,
-  map: () => map,
-  object: () => object
-});
-var array;
-((array2) => {
-  function getItemCyclic(arr, index) {
-    const wrappedIndex = (index % arr.length + arr.length) % arr.length;
-    return arr[wrappedIndex];
-  }
-  array2.getItemCyclic = getItemCyclic;
-  function getLastItem(arr) {
-    return arr[-1];
-  }
-  array2.getLastItem = getLastItem;
-  function getRandomItem(arr) {
-    const randomIndex = Math.floor(Math.random() * arr.length);
-    return arr[randomIndex];
-  }
-  array2.getRandomItem = getRandomItem;
-  function removeItemAtIndex(arr, index) {
-    if (index < 0 || index >= arr.length) throw new Error(`${index} is not Valid!`);
-    return arr.splice(index, 1)[0];
-  }
-  array2.removeItemAtIndex = removeItemAtIndex;
-  function removeItem(arr, item) {
-    if (!arr.includes(item)) return void 0;
-    return arr.splice(arr.indexOf(item), 1)[0];
-  }
-  array2.removeItem = removeItem;
-  function sum(arr) {
-    return arr.reduce((a, b) => a += isNaN(b) ? 0 : b);
-  }
-  array2.sum = sum;
-  function isEmpty(arr) {
-    return !arr || arr.length === 0;
-  }
-  array2.isEmpty = isEmpty;
-  function copyOf(arr) {
-    return [...arr];
-  }
-  array2.copyOf = copyOf;
-  function connectArrays(arrays) {
-    let connected = [];
-    for (let arr of arrays) {
-      connected = connected.concat(arr);
-    }
-    return connected;
-  }
-  array2.connectArrays = connectArrays;
-})(array || (array = {}));
-var map;
-((map2) => {
-  function copyOf(map3) {
-    var newMap = /* @__PURE__ */ new Map();
-    for (let [key, value] of map3.entries()) {
-      newMap.set(key, value);
-    }
-    return newMap;
-  }
-  map2.copyOf = copyOf;
-})(map || (map = {}));
-var object;
-((object2) => {
-  function findClassName(clas) {
-    return clas instanceof Function ? clas.name : clas.constructor.name;
-  }
-  object2.findClassName = findClassName;
-  function findSuperClassName(clas) {
-    return clas instanceof Function ? Object.getPrototypeOf(clas).name : Object.getPrototypeOf(Object.getPrototypeOf(clas)).constructor.name;
-  }
-  object2.findSuperClassName = findSuperClassName;
-  function findClass(clas) {
-    return clas instanceof Function ? clas : Object.getPrototypeOf(clas).constructor;
-  }
-  object2.findClass = findClass;
-  function findSuperClass(clas) {
-    return clas instanceof Function ? Object.getPrototypeOf(clas) : Object.getPrototypeOf(Object.getPrototypeOf(clas)).constructor;
-  }
-  object2.findSuperClass = findSuperClass;
-  function findAllClassNames(clas) {
-    const superClasses = [];
-    let currentClass = object2.findClass(clas);
-    while (currentClass.name != "") {
-      superClasses.push(currentClass.name);
-      currentClass = object2.findSuperClass(currentClass);
-    }
-    return superClasses;
-  }
-  object2.findAllClassNames = findAllClassNames;
-  function findAllClasses(clas) {
-    const superClasses = [];
-    let currentClass = object2.findClass(clas);
-    while (currentClass.name != "") {
-      superClasses.push(currentClass);
-      currentClass = object2.findSuperClass(currentClass);
-    }
-    return superClasses;
-  }
-  object2.findAllClasses = findAllClasses;
-  function findAllSuperClassNames(clas) {
-    const superClasses = [];
-    let currentClass = object2.findSuperClass(clas);
-    while (currentClass.name != "") {
-      superClasses.push(currentClass.name);
-      currentClass = object2.findSuperClass(currentClass);
-    }
-    return superClasses;
-  }
-  object2.findAllSuperClassNames = findAllSuperClassNames;
-  function findAllSuperClasses(clas) {
-    const superClasses = [];
-    let currentClass = object2.findSuperClass(clas);
-    while (currentClass.name != "") {
-      superClasses.push(currentClass);
-      currentClass = object2.findSuperClass(currentClass);
-    }
-    return superClasses;
-  }
-  object2.findAllSuperClasses = findAllSuperClasses;
-})(object || (object = {}));
-
-// ts/util/index.ts
-var Util8 = {
-  ...object_util_exports,
-  ...math_util_exports,
-  ...vector_util_exports
-};
 export {
   Camera,
   Canvas,
@@ -1420,7 +1409,7 @@ export {
   Triangulation,
   TurnBasedManager,
   TwoKeyMap,
-  Util8 as Util,
+  Util,
   Vector2,
   Zoom,
   math,
