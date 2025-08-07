@@ -2,22 +2,52 @@ import { Scene } from "engine/scenes";
 import { Renderer } from "engine/display";
 
 export class SceneManager {
-	private currentScene: Scene | null = null;
+	private sceneMap: Map<string, Scene> = new Map();
+	private activeScenes: Scene[] = [];
 
-	setScene(scene: Scene) {
-		this.currentScene = scene;
+	addScene(name: string, scene: Scene) {
+		this.sceneMap.set(name, scene);
+	}
+
+	enableScene(name: string) {
+		const scene = this.sceneMap.get(name);
+		if (scene && !this.activeScenes.includes(scene)) {
+			this.activeScenes.push(scene);
+			scene.onLoad?.(); // optionaler Hook
+		}
+	}
+
+	disableScene(name: string) {
+		const scene = this.sceneMap.get(name);
+		if (scene) {
+			this.activeScenes = this.activeScenes.filter(s => s !== scene);
+			scene.onUnload?.(); // optionaler Hook
+		}
+	}
+
+	clearScenes() {
+		for (const scene of this.activeScenes) {
+			scene.onUnload?.();
+		}
+		this.activeScenes = [];
 	}
 
 	fixedUpdate(dt: number) {
-		this.currentScene?.fixedUpdate(dt);
+		for (const scene of this.activeScenes) {
+			scene.fixedUpdate(dt);
+		}
 	}
 
 	update(dt: number) {
-		this.currentScene?.update(dt);
+		for (const scene of this.activeScenes) {
+			scene.update(dt);
+		}
 	}
 
 	render(renderer: Renderer) {
-		this.currentScene?.render(renderer);
+		for (const scene of this.activeScenes) {
+			scene.render(renderer);
+		}
 	}
 }
 

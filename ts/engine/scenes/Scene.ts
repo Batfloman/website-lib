@@ -1,7 +1,11 @@
 import { Renderer } from "engine/display";
 
-export interface Scene {
-	fixedUpdate(dt: number): void;
-	update(dt: number): void;
-	render(renderer: Renderer): void;
+export abstract class Scene {
+	// optional
+	onLoad?(): void;
+	onUnload?(): void;
+
+	abstract fixedUpdate(dt: number): void;
+	abstract update(dt: number): void;
+	abstract render(renderer: Renderer): void;
 }
