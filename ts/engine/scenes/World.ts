@@ -1,13 +1,16 @@
 import { Renderer } from "engine/display";
 import { GameObject } from "../entities/GameObject";
+import { Scene } from "./Scene";
 
-export class Scene {
+export class World implements Scene {
 	private objects: Set<GameObject> = new Set();
-	// public readonly cameras: 
-	// public readonly camera: Camera;
 
 	addObject(obj: GameObject) {
 		this.objects.add(obj);
+	}
+
+	fixedUpdate(dt: number): void {
+		for (const obj of this.objects) obj.fixedUpdate(dt);
 	}
 
 	update(dt: number) {
