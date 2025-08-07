@@ -7,18 +7,6 @@ declare class TwoKeyMap<K, K2, V> {
     delete(key: K, key2: K2): void;
 }
 
-declare class GameLoop {
-    private game;
-    private lastTickTime;
-    private isStopped;
-    constructor(game: {
-        update: (dt: number) => void;
-    });
-    start(): void;
-    stop(): void;
-    private loop;
-}
-
 declare class Color {
     static none: Color;
     r: number;
@@ -147,8 +135,9 @@ declare class CollideableBehaviour {
 }
 
 interface IUpdateable {
-    update(deltatime: number): void;
-    shouldUpdate(): boolean;
+    update(deltaTime: number): void;
+    shouldUpdate?(): boolean;
+    fixedUpdate?(dt: number): void;
 }
 
 interface IPreUpdateable extends IUpdateable {
@@ -157,7 +146,7 @@ interface IPreUpdateable extends IUpdateable {
 
 interface IRenderable {
     render(renderer: Renderer): void;
-    shouldRender(): boolean;
+    shouldRender?(): boolean;
 }
 
 interface IScaleable {
@@ -292,6 +281,31 @@ declare class CanvasRenderer extends Renderer {
     renderRectangle(pos: Vector2, pos2: Vector2, args?: RenderArgs): void;
 }
 
+declare class GameLoop {
+    private game;
+    private renderer;
+    private lastTickTime;
+    private isStopped;
+    private accumulator;
+    private readonly fixedDelta;
+    constructor(game: {
+        fixedUpdate: (fixedDt: number) => void;
+        update: (dt: number) => void;
+        render: (renderer: Renderer) => void;
+    }, renderer: Renderer);
+    start(): void;
+    stop(): void;
+    private loop;
+}
+
+declare abstract class Scene implements IUpdateable, IRenderable {
+    onLoad?(): void;
+    onUnload?(): void;
+    abstract fixedUpdate(dt: number): void;
+    abstract update(dt: number): void;
+    abstract render(renderer: Renderer): void;
+}
+
 declare abstract class SceneObject implements IUpdateable {
     abstract update(deltaTime: number): void;
     abstract shouldUpdate(): boolean;
@@ -302,32 +316,48 @@ declare abstract class GameObject extends SceneObject implements IMoveable, IRen
     mover: TranslationBehavior;
     orientation: number;
     rotator: RotateBehaviour;
+    abstract fixedUpdate(dt: number): void;
     abstract update(deltaTime: number): void;
     shouldUpdate(): boolean;
     abstract render(renderer: Renderer): void;
     shouldRender(): boolean;
 }
 
-declare class Scene {
+declare class World implements Scene {
     private objects;
     addObject(obj: GameObject): void;
+    fixedUpdate(dt: number): void;
+    update(dt: number): void;
+    render(renderer: Renderer): void;
+}
+
+declare class SceneManager {
+    private sceneMap;
+    private activeScenes;
+    addScene(name: string, scene: Scene): void;
+    enableScene(name: string): void;
+    disableScene(name: string): void;
+    clearScenes(): void;
+    fixedUpdate(dt: number): void;
     update(dt: number): void;
     render(renderer: Renderer): void;
 }
 
 declare abstract class GameManager {
     readonly gameLoop: GameLoop;
-    protected scene: Scene;
-    constructor();
-    abstract update(deltaTime: number): void;
+    readonly sceneManager: SceneManager;
+    constructor(renderer: Renderer);
+    fixedUpdate(dt: number): void;
+    update(dt: number): void;
+    render(renderer: Renderer): void;
 }
 
 declare class RealTimeManager extends GameManager {
-    update(deltaTime: number): void;
+    update(dt: number): void;
 }
 
 declare class TurnBasedManager extends GameManager {
-    update(deltaTime: number): void;
+    update(dt: number): void;
 }
 
 type inputKey = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "shift" | "space" | "tab" | "alt" | "strg" | "altRight" | "leftclick" | "rightclick" | "middleclick" | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "up" | "left" | "down" | "right";
@@ -399,4 +429,4 @@ declare const Util: {
     object: typeof object;
 };
 
-export { Camera, Canvas, CanvasCamera, CanvasRenderer, Circle, CollideableBehaviour, Collision, Color, ControllableObject, GameLoop, GameManager, GameObject, HitBox, type ICollideable, type IMoveable, type IPreUpdateable, type IRenderable, type IRotateable, type IScaleable, type ITranslateable, type IUpdateable, Input, Matrix2, Polygon2, type PolygonWinding, RealTimeManager, Rectangle, type RenderArgs, Renderer, RotateBehaviour, SAT, ScaleBehavior, Scene, SceneObject, Thread, TranslationBehavior, Triangle, Triangulation, TurnBasedManager, TwoKeyMap, Util, Vector2, Zoom, type inputKey, math, vector };
+export { Camera, Canvas, CanvasCamera, CanvasRenderer, Circle, CollideableBehaviour, Collision, Color, ControllableObject, GameLoop, GameManager, GameObject, HitBox, type ICollideable, type IMoveable, type IPreUpdateable, type IRenderable, type IRotateable, type IScaleable, type ITranslateable, type IUpdateable, Input, Matrix2, Polygon2, type PolygonWinding, RealTimeManager, Rectangle, type RenderArgs, Renderer, RotateBehaviour, SAT, ScaleBehavior, Scene, SceneManager, SceneObject, Thread, TranslationBehavior, Triangle, Triangulation, TurnBasedManager, TwoKeyMap, Util, Vector2, World, Zoom, type inputKey, math, vector };

@@ -43,6 +43,7 @@ __export(index_exports, {
   SAT: () => SAT,
   ScaleBehavior: () => ScaleBehavior,
   Scene: () => Scene,
+  SceneManager: () => SceneManager,
   SceneObject: () => SceneObject,
   Thread: () => Thread,
   TranslationBehavior: () => TranslationBehavior,
@@ -52,6 +53,7 @@ __export(index_exports, {
   TwoKeyMap: () => TwoKeyMap,
   Util: () => Util,
   Vector2: () => Vector2,
+  World: () => World,
   Zoom: () => Zoom,
   math: () => math,
   vector: () => vector
@@ -87,66 +89,117 @@ var TwoKeyMap = class {
 
 // ts/engine/core/GameLoop.ts
 var GameLoop = class {
-  constructor(game) {
+  // 60 FPS → 16.666... ms
+  constructor(game, renderer) {
     this.game = game;
+    this.renderer = renderer;
   }
   lastTickTime = Date.now();
   isStopped = false;
+  accumulator = 0;
+  fixedDelta = 1 / 60;
   start() {
     this.isStopped = false;
+    this.lastTickTime = Date.now();
+    this.accumulator = 0;
     this.loop();
   }
   stop() {
     this.isStopped = true;
   }
-  loop = () => {
+  loop() {
     const now = Date.now();
     const deltaTime = (now - this.lastTickTime) / 1e3;
     this.lastTickTime = now;
+    this.accumulator += deltaTime;
+    while (this.accumulator >= this.fixedDelta) {
+      this.game.fixedUpdate(this.fixedDelta);
+      this.accumulator -= this.fixedDelta;
+    }
     this.game.update(deltaTime);
+    this.game.render(this.renderer);
     if (!this.isStopped) {
       window.requestAnimationFrame(this.loop);
     }
-  };
+  }
 };
 
-// ts/engine/managers/Scene.ts
-var Scene = class {
-  objects = /* @__PURE__ */ new Set();
-  // public readonly cameras: 
-  // public readonly camera: Camera;
-  addObject(obj) {
-    this.objects.add(obj);
+// ts/engine/core/SceneManager.ts
+var SceneManager = class {
+  sceneMap = /* @__PURE__ */ new Map();
+  activeScenes = [];
+  addScene(name, scene) {
+    this.sceneMap.set(name, scene);
+  }
+  enableScene(name) {
+    const scene = this.sceneMap.get(name);
+    if (scene && !this.activeScenes.includes(scene)) {
+      this.activeScenes.push(scene);
+      scene.onLoad?.();
+    }
+  }
+  disableScene(name) {
+    const scene = this.sceneMap.get(name);
+    if (scene) {
+      this.activeScenes = this.activeScenes.filter((s) => s !== scene);
+      scene.onUnload?.();
+    }
+  }
+  clearScenes() {
+    for (const scene of this.activeScenes) {
+      scene.onUnload?.();
+    }
+    this.activeScenes = [];
+  }
+  fixedUpdate(dt) {
+    for (const scene of this.activeScenes) {
+      scene.fixedUpdate(dt);
+    }
   }
   update(dt) {
-    for (const obj of this.objects) obj.update(dt);
+    for (const scene of this.activeScenes) {
+      scene.update(dt);
+    }
   }
   render(renderer) {
-    for (const obj of this.objects) obj.render(renderer);
+    for (const scene of this.activeScenes) {
+      scene.render(renderer);
+    }
   }
 };
 
 // ts/engine/core/GameManager.ts
 var GameManager = class {
   gameLoop;
-  scene;
-  constructor() {
-    this.gameLoop = new GameLoop(this);
-    this.scene = new Scene();
+  sceneManager;
+  constructor(renderer) {
+    this.gameLoop = new GameLoop(this, renderer);
+    this.sceneManager = new SceneManager();
+  }
+  fixedUpdate(dt) {
+    this.sceneManager.fixedUpdate(dt);
+  }
+  update(dt) {
+    this.sceneManager.update(dt);
+  }
+  render(renderer) {
+    this.sceneManager.render(renderer);
   }
 };
 
 // ts/engine/core/RealTimeManager.ts
 var RealTimeManager = class extends GameManager {
-  update(deltaTime) {
-    console.log(deltaTime);
+  update(dt) {
+    super.update(dt);
+    console.log(dt);
   }
 };
 
 // ts/engine/core/TurnBasedManager.ts
 var TurnBasedManager = class extends GameManager {
-  update(deltaTime) {
-    console.log(deltaTime);
+  update(dt) {
+    super.update(dt);
+    console.log(dt);
   }
 };
 
@@ -1414,6 +1467,27 @@ var ControllableObject = class extends GameObject {
   }
 };
 
+// ts/engine/scenes/Scene.ts
+var Scene = class {
+};
+
+// ts/engine/scenes/World.ts
+var World = class {
+  objects = /* @__PURE__ */ new Set();
+  addObject(obj) {
+    this.objects.add(obj);
+  }
+  fixedUpdate(dt) {
+    for (const obj of this.objects) obj.fixedUpdate(dt);
+  }
+  update(dt) {
+    for (const obj of this.objects) obj.update(dt);
+  }
+  render(renderer) {
+    for (const obj of this.objects) obj.render(renderer);
+  }
+};
+
 // ts/multiThreading/Thread.ts
 var Thread = class {
   blobURL;
@@ -1457,6 +1531,7 @@ var Thread = class {
   SAT,
   ScaleBehavior,
   Scene,
+  SceneManager,
   SceneObject,
   Thread,
   TranslationBehavior,
@@ -1466,6 +1541,7 @@ var Thread = class {
   TwoKeyMap,
   Util,
   Vector2,
+  World,
   Zoom,
   math,
   vector
