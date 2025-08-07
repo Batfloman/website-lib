@@ -1,6 +1,7 @@
 import { Renderer } from "engine/display";
+import { IRenderable, IUpdateable } from "engine/propertys";
 
-export abstract class Scene {
+export abstract class Scene implements IUpdateable, IRenderable {
 	// optional
 	onLoad?(): void;
 	onUnload?(): void;

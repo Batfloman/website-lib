@@ -1,4 +1,5 @@
 export interface IUpdateable {
-	update(deltatime: number): void;
-	shouldUpdate(): boolean;
+	update(deltaTime: number): void;
+	shouldUpdate?(): boolean;
+	fixedUpdate?(dt: number): void;
 }

@@ -12,7 +12,7 @@ export class GameLoop {
 			update: (dt: number) => void;
 			render: (renderer: Renderer) => void;
 		},
-		private renderer: Renderer;
+		private renderer: Renderer,
 	) { }
 
 	start() {

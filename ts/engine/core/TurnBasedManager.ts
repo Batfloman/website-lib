@@ -1,7 +1,8 @@
 import { GameManager } from "./GameManager";
 
 export class TurnBasedManager extends GameManager {
-	update(deltaTime: number) {
-		console.log(deltaTime);
+	update(dt: number) {
+		super.update(dt)
+		console.log(dt);
 	}
 }

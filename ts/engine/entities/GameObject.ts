@@ -9,6 +9,7 @@ export abstract class GameObject extends SceneObject implements IMoveable, IRend
 	orientation: number = 0;
 	rotator: RotateBehaviour = new RotateBehaviour(this);
 
+	abstract fixedUpdate(dt: number): void;
 	abstract update(deltaTime: number): void;
 	shouldUpdate(): boolean {
 		return true;

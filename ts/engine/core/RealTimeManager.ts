@@ -1,8 +1,10 @@
+import { Renderer } from 'engine/display';
 import { GameManager } from '../core/GameManager';
 
 export class RealTimeManager extends GameManager {
-	update(deltaTime: number) {
-		console.log(deltaTime);
+	update(dt: number) {
+		super.update(dt)
+		console.log(dt);
 	}
 }
 

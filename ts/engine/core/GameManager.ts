@@ -11,7 +11,15 @@ export abstract class GameManager {
 		this.sceneManager = new SceneManager();
 	}
 
-	abstract fixedUpdate(fixedDt: number): void;
-	abstract update(deltaTime: number): void;
-	abstract render(renderer: Renderer): void;
+	fixedUpdate(dt: number): void {
+		this.sceneManager.fixedUpdate(dt);
+	}
+
+	update(dt: number): void {
+		this.sceneManager.update(dt);
+	}
+
+	render(renderer: Renderer): void {
+		this.sceneManager.render(renderer);
+	}
 }
