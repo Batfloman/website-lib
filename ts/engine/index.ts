@@ -4,4 +4,5 @@ export * from './display/index';
 export * from './entities/index';
 export * from './physic/index';
 export * from './propertys/index';
+export * from './renderer/index';
 export * from './scenes/index';

@@ -1,4 +1,4 @@
-import { Renderer } from "../display/Renderer";
+import { Renderer } from "engine/renderer";
 import { IMoveable, IRenderable, TranslationBehavior, RotateBehaviour } from "engine/propertys";
 import { SceneObject } from "./SceneObject";
 import { Vector2 } from "math";

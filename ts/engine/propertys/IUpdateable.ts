@@ -1,5 +1,5 @@
-export interface IUpdateable {
-	update(deltaTime: number): void;
+export interface IUpdateable<TContext = undefined> {
+	update(deltaTime: number, context: TContext): void;
 	shouldUpdate?(): boolean;
-	fixedUpdate?(dt: number): void;
+	fixedUpdate?(dt: number, context: TContext): void;
 }

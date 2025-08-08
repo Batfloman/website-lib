@@ -1,4 +1,4 @@
-import { Renderer } from "engine/display";
+import { Renderer } from "engine/renderer";
 import { GameObject } from "../entities/GameObject";
 import { Scene } from "./Scene";
 

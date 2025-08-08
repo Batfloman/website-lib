@@ -1,4 +1,3 @@
-import { Renderer } from 'engine/display';
 import { GameManager } from '../core/GameManager';
 
 export class RealTimeManager extends GameManager {

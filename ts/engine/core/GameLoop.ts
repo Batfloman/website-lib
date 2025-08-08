@@ -1,4 +1,4 @@
-import { Renderer } from "engine/display";
+import { Renderer } from "engine/renderer";
 
 export class GameLoop {
 	private lastTickTime = Date.now();

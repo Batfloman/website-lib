@@ -1,4 +1,4 @@
-import { Renderer } from "engine/display";
+import { Renderer } from "engine/renderer";
 
 export interface IRenderable {
 	render(renderer: Renderer): void;

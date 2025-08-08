@@ -1,7 +1,13 @@
 import { Scene } from "engine/scenes";
-import { Renderer } from "engine/display";
+import { Renderer } from "engine/renderer";
+import { GameContext } from "./GameManager";
+import { IUpdateable } from "engine/propertys";
 
-export class SceneManager {
+export interface SceneContext extends GameContext {
+	scene: Scene,
+}
+
+export class SceneManager implements IUpdateable<GameContext> {
 	private sceneMap: Map<string, Scene> = new Map();
 	private activeScenes: Scene[] = [];
 
@@ -32,15 +38,17 @@ export class SceneManager {
 		this.activeScenes = [];
 	}
 
-	fixedUpdate(dt: number) {
+	fixedUpdate(dt: number, context: GameContext) {
 		for (const scene of this.activeScenes) {
-			scene.fixedUpdate(dt);
+			const sceneContext: SceneContext = { ...context, scene }
+			scene.fixedUpdate(dt, sceneContext);
 		}
 	}
 
-	update(dt: number) {
+	update(dt: number, context: GameContext) {
 		for (const scene of this.activeScenes) {
-			scene.update(dt);
+			const sceneContext: SceneContext = { ...context, scene }
+			scene.update(dt, sceneContext);
 		}
 	}
 
@@ -50,4 +58,3 @@ export class SceneManager {
 		}
 	}
 }
-
