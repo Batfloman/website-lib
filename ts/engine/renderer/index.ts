@@ -1,4 +1,4 @@
 // AUTO-GENERATED
-export * from './Camera';
-export * from './Zoom';
+export * from './Color';
+export * from './Renderer';
 export * from './htmlCanvas/index';

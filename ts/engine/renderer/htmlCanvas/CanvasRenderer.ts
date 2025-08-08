@@ -1,5 +1,4 @@
 import { Vector2 } from "math";
-import { Color } from "../Color";
 import { Renderer, RenderArgs } from "../Renderer";
 
 export class CanvasRenderer extends Renderer {
@@ -9,6 +8,10 @@ export class CanvasRenderer extends Renderer {
 		super();
 
 		this.canvas = canvas;
+	}
+
+	clear() {
+
 	}
 
 	renderLine(pos1: Vector2, pos2: Vector2, args?: RenderArgs): void {

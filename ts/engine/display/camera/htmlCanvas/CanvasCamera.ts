@@ -1,7 +1,7 @@
 import { Rectangle } from "engine/physic";
 import { Vector2 } from "math";
-import { Camera } from "../camera/Camera";
-import { Canvas } from "./Canvas";
+import { Camera } from "../Camera";
+import { Canvas } from "engine/renderer";
 import { Input } from "input";
 
 export class CanvasCamera extends Camera {
