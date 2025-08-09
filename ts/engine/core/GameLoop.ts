@@ -26,22 +26,19 @@ export class GameLoop {
 		this.isStopped = true;
 	}
 
-	private loop() {
+	// arrow function to preserve the `this` context
+	private loop = () => {
 		const now = Date.now();
 		const deltaTime = (now - this.lastTickTime) / 1000;
 		this.lastTickTime = now;
 		this.accumulator += deltaTime;
 
-		// 🧮 Fixed-step loop
 		while (this.accumulator >= this.fixedDelta) {
 			this.game.fixedUpdate(this.fixedDelta);
 			this.accumulator -= this.fixedDelta;
 		}
 
-		// 🧠 Variable update (z. B. Animationen)
 		this.game.update(deltaTime);
-
-		// 🎨 Rendering
 		this.game.render(this.renderer);
 
 		if (!this.isStopped) {
