@@ -41,7 +41,7 @@ export class SceneManager implements IUpdateable<GameContext> {
 	fixedUpdate(dt: number, context: GameContext) {
 		for (const scene of this.activeScenes) {
 			const sceneContext: SceneContext = { ...context, scene }
-			scene.fixedUpdate(dt, sceneContext);
+			scene.fixedUpdate?.(dt, sceneContext);
 		}
 	}
 
