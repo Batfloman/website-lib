@@ -7,6 +7,43 @@ declare class TwoKeyMap<K, K2, V> {
     delete(key: K, key2: K2): void;
 }
 
+interface KDNode<T> {
+    item: T;
+    axis: number;
+    left: KDNode<T> | null;
+    right: KDNode<T> | null;
+}
+interface KDTreeOptions<T> {
+    getPoint: (item: T) => number[];
+    distance?: (a: number[], b: number[]) => number;
+}
+declare class KDTree<T> {
+    private root;
+    private dim;
+    private getPoint;
+    private distance;
+    private items;
+    private modificationsSinceRebuild;
+    constructor(options: KDTreeOptions<T>, items: T[]);
+    insert(item: T): void;
+    remove(item: T): void;
+    clear(): void;
+    nearest(query: number[], k?: number): {
+        item: T;
+        dist: number;
+    }[];
+    range(query: number[], radius: number): T[];
+    queryRange(min: number[], max: number[]): T[];
+    private shouldRebuild;
+    private rebuild;
+    private insertRec;
+    private removeRec;
+    private findMin;
+    private findMax;
+    private build;
+    private static euclidean;
+}
+
 declare class Color {
     static none: Color;
     r: number;
@@ -53,9 +90,18 @@ type RenderArgs = {
 };
 declare abstract class Renderer {
     static defaultArgs: RenderArgs;
+    abstract clear(): void;
     abstract renderLine(pos1: Vector2, pos2: Vector2, args?: RenderArgs): void;
     abstract renderCircle(pos: Vector2, radius: number, args?: RenderArgs): void;
     abstract renderRectangle(pos: Vector2, pos2: Vector2, args?: RenderArgs): void;
+}
+
+declare class Canvas {
+    private htmlCanvas;
+    width: number;
+    height: number;
+    constructor(htmlCanvas: HTMLCanvasElement | null);
+    updateSize(): void;
 }
 
 declare class Matrix2<T> {
@@ -94,72 +140,30 @@ declare namespace vector {
     function distance(vec1: Vector2, vec2: Vector2): number;
 }
 
-interface ITranslateable {
-    pos: Vector2;
-    mover: TranslationBehavior;
-}
-declare class TranslationBehavior {
-    private host;
-    constructor(host: {
-        pos: Vector2;
-    });
-    moveDirection(degrees: number, distance: number): void;
-    move(vec: Vector2): void;
+declare class CanvasRenderer extends Renderer {
+    protected canvas: HTMLCanvasElement;
+    constructor(canvas: HTMLCanvasElement);
+    clear(): void;
+    renderLine(pos1: Vector2, pos2: Vector2, args?: RenderArgs): void;
+    renderCircle(pos: Vector2, radius: number, args?: RenderArgs): void;
+    renderRectangle(pos: Vector2, pos2: Vector2, args?: RenderArgs): void;
 }
 
-interface IRotateable {
-    orientation: number;
-    rotator: RotateBehaviour;
-}
-declare class RotateBehaviour {
-    private host;
-    constructor(host: IRotateable);
-    rotate(degrees: number): void;
-    setRotation(degrees: number): void;
-}
-
-interface IMoveable extends ITranslateable, IRotateable {
-}
-
-interface ICollideable<Box extends HitBox = HitBox> extends IMoveable {
-    hitBox: Box;
-    collider: CollideableBehaviour;
-}
-declare class CollideableBehaviour {
-    private host;
-    translatedPoints: Vector2[];
-    alreadyTranslated: boolean;
-    constructor(host: ICollideable);
-    isCollidingWith(other: ICollideable): boolean;
-    translatePoints(): Vector2[];
-}
-
-interface IUpdateable {
-    update(deltaTime: number): void;
-    shouldUpdate?(): boolean;
-    fixedUpdate?(dt: number): void;
-}
-
-interface IPreUpdateable extends IUpdateable {
-    preUpdate(deltaTime: number): void;
-}
-
-interface IRenderable {
-    render(renderer: Renderer): void;
-    shouldRender?(): boolean;
-}
-
-interface IScaleable {
-    scale: number;
-    scaler: ScaleBehavior;
-}
-declare class ScaleBehavior {
-    private host;
-    constructor(host: {
-        scale: number;
-    });
-    scale(scalar: number): void;
-    setScale(scale: number): void;
+declare class GameLoop {
+    private game;
+    private renderer;
+    private lastTickTime;
+    private isStopped;
+    private accumulator;
+    private readonly fixedDelta;
+    constructor(game: {
+        fixedUpdate: (fixedDt: number) => void;
+        update: (dt: number) => void;
+        render: (renderer: Renderer) => void;
+    }, renderer: Renderer);
+    start(): void;
+    stop(): void;
+    private loop;
 }
 
 declare namespace Collision {
@@ -225,6 +229,144 @@ declare class Triangle extends Polygon2 {
     constructor(p1: Vector2, p2: Vector2, p3: Vector2);
 }
 
+interface IPositionable {
+    pos: Vector2;
+}
+interface ITranslateable extends IPositionable {
+    mover: TranslationBehavior;
+}
+declare class TranslationBehavior {
+    private host;
+    constructor(host: {
+        pos: Vector2;
+    });
+    moveDirection(degrees: number, distance: number): void;
+    move(vec: Vector2): void;
+}
+declare function isPositionable(obj: any): obj is IPositionable;
+declare function isTranslateable(obj: any): obj is ITranslateable;
+
+interface IRotateable {
+    orientation: number;
+    rotator: RotateBehaviour;
+}
+declare class RotateBehaviour {
+    private host;
+    constructor(host: IRotateable);
+    rotate(degrees: number): void;
+    setRotation(degrees: number): void;
+}
+
+interface IMoveable extends ITranslateable, IRotateable {
+}
+
+interface ICollideable<Box extends HitBox = HitBox> extends IMoveable {
+    hitBox: Box;
+    collider: CollideableBehaviour;
+}
+declare class CollideableBehaviour {
+    private host;
+    translatedPoints: Vector2[];
+    alreadyTranslated: boolean;
+    constructor(host: ICollideable);
+    isCollidingWith(other: ICollideable): boolean;
+    translatePoints(): Vector2[];
+}
+
+interface IUpdateable<TContext = undefined> {
+    update(deltaTime: number, context: TContext): void;
+    shouldUpdate?(): boolean;
+    fixedUpdate?(dt: number, context: TContext): void;
+}
+
+interface IPreUpdateable extends IUpdateable {
+    preUpdate(deltaTime: number): void;
+}
+
+interface IRenderable {
+    render(renderer: Renderer): void;
+    shouldRender?(): boolean;
+}
+
+interface IScaleable {
+    scale: number;
+    scaler: ScaleBehavior;
+}
+declare class ScaleBehavior {
+    private host;
+    constructor(host: {
+        scale: number;
+    });
+    scale(scalar: number): void;
+    setScale(scale: number): void;
+}
+
+declare abstract class Scene implements IUpdateable<SceneContext>, IRenderable {
+    onLoad?(): void;
+    onUnload?(): void;
+    abstract fixedUpdate?(dt: number, context: SceneContext): void;
+    abstract update(dt: number, context: SceneContext): void;
+    abstract render(renderer: Renderer): void;
+}
+
+declare class ObjectScene extends Scene {
+    private updateables;
+    private renderables;
+    addObject(obj: IUpdateable<SceneContext> & Partial<IRenderable>): void;
+    removeObject(obj: IUpdateable<SceneContext> & Partial<IRenderable>): void;
+    fixedUpdate(dt: number, context: SceneContext): void;
+    update(dt: number, context: SceneContext): void;
+    render(renderer: Renderer): void;
+    clearObjects(): void;
+}
+
+declare class WorldScene extends ObjectScene {
+    private spatialIndex;
+    addObject(obj: IUpdateable<SceneContext> & Partial<IRenderable> & Partial<IPositionable>): void;
+    removeObject(obj: any): void;
+    updateObjectPosition(obj: IPositionable): void;
+    getObjectsInArea(area: {
+        pos: Vector2;
+        size: Vector2;
+    }): IPositionable[];
+    clearObjects(): void;
+}
+
+interface SceneContext extends GameContext {
+    scene: Scene;
+}
+declare class SceneManager implements IUpdateable<GameContext> {
+    private sceneMap;
+    private activeScenes;
+    addScene(name: string, scene: Scene): void;
+    enableScene(name: string): void;
+    disableScene(name: string): void;
+    clearScenes(): void;
+    fixedUpdate(dt: number, context: GameContext): void;
+    update(dt: number, context: GameContext): void;
+    render(renderer: Renderer): void;
+}
+
+declare abstract class GameManager implements IUpdateable {
+    readonly gameLoop: GameLoop;
+    readonly sceneManager: SceneManager;
+    constructor(renderer: Renderer);
+    fixedUpdate(dt: number): void;
+    update(dt: number): void;
+    render(renderer: Renderer): void;
+}
+interface GameContext {
+    game: GameManager;
+}
+
+declare class RealTimeManager extends GameManager {
+    update(dt: number): void;
+}
+
+declare class TurnBasedManager extends GameManager {
+    update(dt: number): void;
+}
+
 declare class Zoom {
     activated: boolean;
     faktor: number;
@@ -257,14 +399,6 @@ declare class Camera implements ICollideable<HitBox>, IMoveable {
     isCollidingWith(other: ICollideable): boolean;
 }
 
-declare class Canvas {
-    private htmlCanvas;
-    width: number;
-    height: number;
-    constructor(htmlCanvas: HTMLCanvasElement | null);
-    updateSize(): void;
-}
-
 declare class CanvasCamera extends Camera {
     constructor(canvas: Canvas);
     private mouseWheel;
@@ -273,41 +407,9 @@ declare class CanvasCamera extends Camera {
     private touchMove;
 }
 
-declare class CanvasRenderer extends Renderer {
-    protected canvas: HTMLCanvasElement;
-    constructor(canvas: HTMLCanvasElement);
-    renderLine(pos1: Vector2, pos2: Vector2, args?: RenderArgs): void;
-    renderCircle(pos: Vector2, radius: number, args?: RenderArgs): void;
-    renderRectangle(pos: Vector2, pos2: Vector2, args?: RenderArgs): void;
-}
-
-declare class GameLoop {
-    private game;
-    private renderer;
-    private lastTickTime;
-    private isStopped;
-    private accumulator;
-    private readonly fixedDelta;
-    constructor(game: {
-        fixedUpdate: (fixedDt: number) => void;
-        update: (dt: number) => void;
-        render: (renderer: Renderer) => void;
-    }, renderer: Renderer);
-    start(): void;
-    stop(): void;
-    private loop;
-}
-
-declare abstract class Scene implements IUpdateable, IRenderable {
-    onLoad?(): void;
-    onUnload?(): void;
-    abstract fixedUpdate(dt: number): void;
-    abstract update(dt: number): void;
-    abstract render(renderer: Renderer): void;
-}
-
-declare abstract class SceneObject implements IUpdateable {
-    abstract update(deltaTime: number): void;
+declare abstract class SceneObject implements IUpdateable<SceneContext> {
+    abstract fixedUpdate?(dt: number, context: SceneContext): void;
+    abstract update(deltaTime: number, context: SceneContext): void;
     abstract shouldUpdate(): boolean;
 }
 
@@ -316,48 +418,11 @@ declare abstract class GameObject extends SceneObject implements IMoveable, IRen
     mover: TranslationBehavior;
     orientation: number;
     rotator: RotateBehaviour;
-    abstract fixedUpdate(dt: number): void;
-    abstract update(deltaTime: number): void;
+    abstract fixedUpdate(dt: number, context: SceneContext): void;
+    abstract update(deltaTime: number, context: SceneContext): void;
     shouldUpdate(): boolean;
     abstract render(renderer: Renderer): void;
     shouldRender(): boolean;
-}
-
-declare class World implements Scene {
-    private objects;
-    addObject(obj: GameObject): void;
-    fixedUpdate(dt: number): void;
-    update(dt: number): void;
-    render(renderer: Renderer): void;
-}
-
-declare class SceneManager {
-    private sceneMap;
-    private activeScenes;
-    addScene(name: string, scene: Scene): void;
-    enableScene(name: string): void;
-    disableScene(name: string): void;
-    clearScenes(): void;
-    fixedUpdate(dt: number): void;
-    update(dt: number): void;
-    render(renderer: Renderer): void;
-}
-
-declare abstract class GameManager {
-    readonly gameLoop: GameLoop;
-    readonly sceneManager: SceneManager;
-    constructor(renderer: Renderer);
-    fixedUpdate(dt: number): void;
-    update(dt: number): void;
-    render(renderer: Renderer): void;
-}
-
-declare class RealTimeManager extends GameManager {
-    update(dt: number): void;
-}
-
-declare class TurnBasedManager extends GameManager {
-    update(dt: number): void;
 }
 
 type inputKey = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "shift" | "space" | "tab" | "alt" | "strg" | "altRight" | "leftclick" | "rightclick" | "middleclick" | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "up" | "left" | "down" | "right";
@@ -382,10 +447,51 @@ declare class Listener {
     constructor(obj: Object, func: Function);
 }
 
-declare abstract class ControllableObject extends GameObject implements IPreUpdateable {
+declare abstract class ControllableObject extends GameObject {
     private controls;
-    preUpdate(deltaTime: number): void;
+    update(deltaTime: number, context: SceneContext): void;
     addControl(key: inputKey, func: Function, max_activation_Interval?: number): void;
+}
+
+interface SpatialIndex<T extends IPositionable> {
+    insert(obj: T, dynamic?: boolean): void;
+    remove(obj: T): void;
+    update(obj: T): void;
+    queryRange(min: Vector2, max: Vector2): T[];
+    clear(): void;
+}
+
+declare class HybridSpatialIndex<T extends IPositionable> implements SpatialIndex<T> {
+    private staticIndex;
+    private dynamicIndex;
+    constructor(cellSize?: number, staticItems?: T[]);
+    insert(obj: T, dynamic?: boolean | null): void;
+    remove(obj: T): void;
+    update(obj: T): void;
+    queryRange(min: Vector2, max: Vector2): T[];
+    clear(): void;
+}
+
+declare class KDTreeIndex<T extends IPositionable> implements SpatialIndex<T> {
+    private tree;
+    constructor(items?: T[]);
+    insert(obj: T, dynamic?: boolean): void;
+    remove(obj: T): void;
+    update(obj: T): void;
+    queryRange(min: Vector2, max: Vector2): T[];
+    clear(): void;
+}
+
+declare class UniformGrid<T extends IPositionable> {
+    private cellSize;
+    private cells;
+    constructor(cellSize?: number);
+    private cellKey;
+    insert(obj: T): void;
+    remove(obj: T): void;
+    update(obj: T): void;
+    queryRange(min: Vector2, max: Vector2): T[];
+    clear(): void;
 }
 
 declare class Thread {
@@ -429,4 +535,4 @@ declare const Util: {
     object: typeof object;
 };
 
-export { Camera, Canvas, CanvasCamera, CanvasRenderer, Circle, CollideableBehaviour, Collision, Color, ControllableObject, GameLoop, GameManager, GameObject, HitBox, type ICollideable, type IMoveable, type IPreUpdateable, type IRenderable, type IRotateable, type IScaleable, type ITranslateable, type IUpdateable, Input, Matrix2, Polygon2, type PolygonWinding, RealTimeManager, Rectangle, type RenderArgs, Renderer, RotateBehaviour, SAT, ScaleBehavior, Scene, SceneManager, SceneObject, Thread, TranslationBehavior, Triangle, Triangulation, TurnBasedManager, TwoKeyMap, Util, Vector2, World, Zoom, type inputKey, math, vector };
+export { Camera, Canvas, CanvasCamera, CanvasRenderer, Circle, CollideableBehaviour, Collision, Color, ControllableObject, type GameContext, GameLoop, GameManager, GameObject, HitBox, HybridSpatialIndex, type ICollideable, type IMoveable, type IPositionable, type IPreUpdateable, type IRenderable, type IRotateable, type IScaleable, type ITranslateable, type IUpdateable, Input, type KDNode, KDTree, KDTreeIndex, type KDTreeOptions, Matrix2, ObjectScene, Polygon2, type PolygonWinding, RealTimeManager, Rectangle, type RenderArgs, Renderer, RotateBehaviour, SAT, ScaleBehavior, Scene, type SceneContext, SceneManager, SceneObject, type SpatialIndex, Thread, TranslationBehavior, Triangle, Triangulation, TurnBasedManager, TwoKeyMap, UniformGrid, Util, Vector2, WorldScene, Zoom, type inputKey, isPositionable, isTranslateable, math, vector };

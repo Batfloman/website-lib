@@ -31,6 +31,209 @@ var TwoKeyMap = class {
   }
 };
 
+// ts/dataStructs/kdTree.ts
+var KDTree = class _KDTree {
+  root = null;
+  dim;
+  getPoint;
+  distance;
+  // for rebuilding
+  items;
+  modificationsSinceRebuild = 0;
+  constructor(options, items) {
+    this.getPoint = options.getPoint;
+    this.distance = options.distance ?? _KDTree.euclidean;
+    this.dim = items.length > 0 ? this.getPoint(items[0]).length : 0;
+    this.items = [...items];
+    this.root = this.build(items, 0);
+  }
+  insert(item) {
+    this.root = this.insertRec(this.root, item, 0);
+    this.items.push(item);
+    this.modificationsSinceRebuild++;
+    if (this.shouldRebuild()) this.rebuild();
+  }
+  remove(item) {
+    this.root = this.removeRec(this.root, item, 0);
+    const idx = this.items.findIndex(
+      (x) => this.getPoint(x).every((v, i) => v === this.getPoint(item)[i])
+    );
+    if (idx !== -1) this.items.splice(idx, 1);
+    this.modificationsSinceRebuild++;
+    if (this.shouldRebuild()) this.rebuild();
+  }
+  clear() {
+    this.root = null;
+    this.items = [];
+    this.modificationsSinceRebuild = 0;
+  }
+  nearest(query, k = 1) {
+    const best = [];
+    const search = (node) => {
+      if (!node) return;
+      const point = this.getPoint(node.item);
+      const dist = this.distance(query, point);
+      if (best.length < k) {
+        best.push({ item: node.item, dist });
+        best.sort((a, b) => a.dist - b.dist);
+      } else if (dist < best[best.length - 1].dist) {
+        best[best.length - 1] = { item: node.item, dist };
+        best.sort((a, b) => a.dist - b.dist);
+      }
+      const axis = node.axis;
+      const diff = query[axis] - point[axis];
+      const first = diff < 0 ? node.left : node.right;
+      const second = diff < 0 ? node.right : node.left;
+      search(first);
+      if (best.length < k || Math.abs(diff) < best[best.length - 1].dist) {
+        search(second);
+      }
+    };
+    search(this.root);
+    return best;
+  }
+  range(query, radius) {
+    const results = [];
+    const search = (node) => {
+      if (!node) return;
+      const point = this.getPoint(node.item);
+      const dist = this.distance(query, point);
+      if (dist <= radius) {
+        results.push(node.item);
+      }
+      const axis = node.axis;
+      const diff = query[axis] - point[axis];
+      if (diff <= radius) search(node.left);
+      if (diff >= -radius) search(node.right);
+    };
+    search(this.root);
+    return results;
+  }
+  queryRange(min, max) {
+    const results = [];
+    const search = (node) => {
+      if (!node) return;
+      const point = this.getPoint(node.item);
+      let inside = true;
+      for (let i = 0; i < this.dim; i++) {
+        if (point[i] < min[i] || point[i] > max[i]) {
+          inside = false;
+          break;
+        }
+      }
+      if (inside) {
+        results.push(node.item);
+      }
+      const axis = node.axis;
+      if (min[axis] <= point[axis]) {
+        search(node.left);
+      }
+      if (max[axis] >= point[axis]) {
+        search(node.right);
+      }
+    };
+    search(this.root);
+    return results;
+  }
+  // -------------------- rebuilding --------------------
+  // since balancing a kdtree is hard we periodically rebuild
+  shouldRebuild() {
+    return this.modificationsSinceRebuild > this.items.length / 2;
+  }
+  rebuild() {
+    this.root = this.build(this.items, 0);
+    this.modificationsSinceRebuild = 0;
+  }
+  // -------------------- helper --------------------
+  insertRec(node, item, depth = 0) {
+    if (!node) {
+      return { item, axis: depth % this.dim, left: null, right: null };
+    }
+    const axis = node.axis;
+    const point = this.getPoint(item);
+    const nodePoint = this.getPoint(node.item);
+    if (point[axis] < nodePoint[axis]) {
+      node.left = this.insertRec(node.left, item, depth + 1);
+    } else {
+      node.right = this.insertRec(node.right, item, depth + 1);
+    }
+    return node;
+  }
+  removeRec(node, item, depth = 0) {
+    if (!node) return null;
+    const axis = node.axis;
+    const point = this.getPoint(item);
+    const nodePoint = this.getPoint(node.item);
+    const isSamePoint = point.every((v, i) => v === nodePoint[i]);
+    if (isSamePoint) {
+      if (node.right) {
+        const minNode = this.findMin(node.right, axis, depth + 1);
+        node.item = minNode.item;
+        node.right = this.removeRec(node.right, minNode.item, depth + 1);
+      } else if (node.left) {
+        const maxNode = this.findMax(node.left, axis, depth + 1);
+        node.item = maxNode.item;
+        node.right = this.removeRec(node.left, maxNode.item, depth + 1);
+      } else {
+        return null;
+      }
+    } else if (point[axis] < nodePoint[axis]) {
+      node.left = this.removeRec(node.left, item, depth + 1);
+    } else {
+      node.right = this.removeRec(node.right, item, depth + 1);
+    }
+    return node;
+  }
+  findMin(node, searchAxis, depth) {
+    if (!node) throw new Error("Empty subtree");
+    const axis = node.axis;
+    if (axis === searchAxis) {
+      return node.left ? this.findMin(node.left, searchAxis, depth + 1) : node;
+    }
+    const leftMin = node.left ? this.findMin(node.left, searchAxis, depth + 1) : node;
+    const rightMin = node.right ? this.findMin(node.right, searchAxis, depth + 1) : node;
+    const minNode = [node, leftMin, rightMin].reduce(
+      (best, cur) => this.getPoint(cur.item)[searchAxis] < this.getPoint(best.item)[searchAxis] ? cur : best
+    );
+    return minNode;
+  }
+  findMax(node, searchAxis, depth) {
+    if (!node) throw new Error("Empty subtree");
+    const axis = node.axis;
+    if (axis === searchAxis) {
+      return node.left ? this.findMax(node.left, searchAxis, depth + 1) : node;
+    }
+    const leftMax = node.left ? this.findMax(node.left, searchAxis, depth + 1) : node;
+    const rightMax = node.right ? this.findMax(node.right, searchAxis, depth + 1) : node;
+    const maxNode = [node, leftMax, rightMax].reduce(
+      (best, cur) => this.getPoint(cur.item)[searchAxis] > this.getPoint(best.item)[searchAxis] ? cur : best
+    );
+    return maxNode;
+  }
+  build(items, depth) {
+    if (items.length === 0) return null;
+    const axis = depth % this.dim;
+    const sorted = [...items].sort(
+      (a, b) => this.getPoint(a)[axis] - this.getPoint(b)[axis]
+    );
+    const mid = Math.floor(sorted.length / 2);
+    return {
+      item: sorted[mid],
+      axis,
+      left: this.build(sorted.slice(0, mid), depth + 1),
+      right: this.build(sorted.slice(mid + 1), depth + 1)
+    };
+  }
+  static euclidean(a, b) {
+    let sum = 0;
+    for (let i = 0; i < a.length; i++) {
+      const d = a[i] - b[i];
+      sum += d * d;
+    }
+    return Math.sqrt(sum);
+  }
+};
+
 // ts/engine/core/GameLoop.ts
 var GameLoop = class {
   // 60 FPS → 16.666... ms
@@ -51,7 +254,8 @@ var GameLoop = class {
   stop() {
     this.isStopped = true;
   }
-  loop() {
+  // arrow function to preserve the `this` context
+  loop = () => {
     const now = Date.now();
     const deltaTime = (now - this.lastTickTime) / 1e3;
     this.lastTickTime = now;
@@ -65,7 +269,7 @@ var GameLoop = class {
     if (!this.isStopped) {
       window.requestAnimationFrame(this.loop);
     }
-  }
+  };
 };
 
 // ts/engine/core/SceneManager.ts
@@ -95,14 +299,16 @@ var SceneManager = class {
     }
     this.activeScenes = [];
   }
-  fixedUpdate(dt) {
+  fixedUpdate(dt, context) {
     for (const scene of this.activeScenes) {
-      scene.fixedUpdate(dt);
+      const sceneContext = { ...context, scene };
+      scene.fixedUpdate?.(dt, sceneContext);
     }
   }
-  update(dt) {
+  update(dt, context) {
     for (const scene of this.activeScenes) {
-      scene.update(dt);
+      const sceneContext = { ...context, scene };
+      scene.update(dt, sceneContext);
     }
   }
   render(renderer) {
@@ -121,10 +327,12 @@ var GameManager = class {
     this.sceneManager = new SceneManager();
   }
   fixedUpdate(dt) {
-    this.sceneManager.fixedUpdate(dt);
+    const context = { game: this };
+    this.sceneManager.fixedUpdate(dt, context);
   }
   update(dt) {
-    this.sceneManager.update(dt);
+    const context = { game: this };
+    this.sceneManager.update(dt, context);
   }
   render(renderer) {
     this.sceneManager.render(renderer);
@@ -357,211 +565,6 @@ var Util = {
   ...vector_util_exports
 };
 
-// ts/engine/display/Color.ts
-var Color = class _Color {
-  static none = new _Color(0, 0, 0, 0);
-  r = 0;
-  g = 0;
-  b = 0;
-  a = 100;
-  constructor(r, g, b, a = 100) {
-    this.r = r - 1 % 255 + 1;
-    this.g = g - 1 % 255 + 1;
-    this.b = b - 1 % 255 + 1;
-    this.a = a - 1 % 100 + 1;
-  }
-  /**
-   * @returns {String} - a String "rgb(r, g, bm a)" with r/g/b/a values for rendering
-   */
-  getRGBString() {
-    return `rgba(${this.r}, ${this.g}, ${this.b}, ${this.a / 100})`;
-  }
-  setR(r) {
-    this.r = (r - 1) % 255 + 1;
-  }
-  setG(g) {
-    this.g = (g - 1) % 255 + 1;
-  }
-  setB(b) {
-    this.b = (b - 1) % 255 + 1;
-  }
-  setA(a) {
-    this.a = (a - 1) % 100 + 1;
-  }
-  // ==========================================================================================
-  // #region static
-  static getRandom() {
-    return new _Color(
-      Math.floor(Math.random() * 256),
-      Math.floor(Math.random() * 256),
-      Math.floor(Math.random() * 256)
-    );
-  }
-  static getRandomNamedColor() {
-    return Util.array.getRandomItem(Array.from(colors.values()));
-  }
-  static get(color) {
-    if (!colors.has(color)) {
-      console.warn(`${color} is not declared!`);
-      return _Color.none;
-    }
-    let c = colors.get(color);
-    if (c == void 0) return _Color.none;
-    return c;
-  }
-  //#endregion
-};
-var colors = /* @__PURE__ */ new Map([
-  ["aliceblue", new Color(240, 248, 255)],
-  ["antiquewhite", new Color(250, 235, 215)],
-  ["aqua", new Color(0, 255, 255)],
-  ["aquamarine", new Color(127, 255, 212)],
-  ["azure", new Color(240, 255, 255)],
-  ["beige", new Color(245, 245, 220)],
-  ["bisque", new Color(255, 228, 196)],
-  ["black", new Color(0, 0, 0)],
-  ["blanchedalmond", new Color(255, 235, 205)],
-  ["blue", new Color(0, 0, 255)],
-  ["blueviolet", new Color(138, 43, 226)],
-  ["brown", new Color(165, 42, 42)],
-  ["burlywood", new Color(222, 184, 135)],
-  ["cadetblue", new Color(95, 158, 160)],
-  ["chartreuse", new Color(127, 255, 0)],
-  ["chocolate", new Color(210, 105, 30)],
-  ["coral", new Color(255, 127, 80)],
-  ["cornflowerblue", new Color(100, 149, 237)],
-  ["cornsilk", new Color(255, 248, 220)],
-  ["crimson", new Color(220, 20, 60)],
-  ["cyan", new Color(0, 255, 255)],
-  ["darkblue", new Color(0, 0, 139)],
-  ["darkcyan", new Color(0, 139, 139)],
-  ["darkgoldenrod", new Color(184, 134, 11)],
-  ["darkgray", new Color(169, 169, 169)],
-  ["darkgreen", new Color(0, 100, 0)],
-  ["darkkhaki", new Color(189, 183, 107)],
-  ["darkmagenta", new Color(139, 0, 139)],
-  ["darkolivegreen", new Color(85, 107, 47)],
-  ["darkorange", new Color(255, 140, 0)],
-  ["darkorchid", new Color(153, 50, 204)],
-  ["darkred", new Color(139, 0, 0)],
-  ["darksalmon", new Color(233, 150, 122)],
-  ["darkseagreen", new Color(143, 188, 143)],
-  ["darkslateblue", new Color(72, 61, 139)],
-  ["darkslategray", new Color(47, 79, 79)],
-  ["darkturquoise", new Color(0, 206, 209)],
-  ["darkviolet", new Color(148, 0, 211)],
-  ["deeppink", new Color(255, 20, 14)],
-  ["deepskyblue", new Color(0, 191, 255)],
-  ["dimgray", new Color(105, 105, 105)],
-  ["dodgerblue", new Color(30, 144, 255)],
-  ["firebrick", new Color(178, 34, 34)],
-  ["floralwhite", new Color(255, 250, 240)],
-  ["forestgreen", new Color(34, 139, 34)],
-  ["fuchsia", new Color(255, 0, 255)],
-  ["gainsboro", new Color(220, 220, 220)],
-  ["ghostwhite", new Color(248, 248, 255)],
-  ["gold", new Color(255, 215, 0)],
-  ["goldenrod", new Color(218, 165, 32)],
-  ["gray", new Color(128, 128, 128)],
-  ["green", new Color(0, 128, 0)],
-  ["greenyellow", new Color(173, 255, 47)],
-  ["honeydew", new Color(240, 255, 240)],
-  ["hotpink", new Color(255, 105, 180)],
-  ["indianred", new Color(205, 92, 92)],
-  ["indigo", new Color(75, 0, 130)],
-  ["ivory", new Color(255, 255, 240)],
-  ["khaki", new Color(240, 230, 140)],
-  ["lavender", new Color(230, 230, 250)],
-  ["lavenderblush", new Color(255, 240, 245)],
-  ["lawngreen", new Color(124, 252, 0)],
-  ["lemonchiffon", new Color(255, 250, 205)],
-  ["lightblue", new Color(173, 216, 230)],
-  ["lightcoral", new Color(240, 128, 128)],
-  ["lightcyan", new Color(224, 255, 255)],
-  ["lightgoldenrodyellow", new Color(250, 250, 210)],
-  ["lightgray", new Color(211, 211, 211)],
-  ["lightgreen", new Color(144, 238, 144)],
-  ["lightpink", new Color(255, 182, 193)],
-  ["lightsalmon", new Color(255, 160, 122)],
-  ["lightseagreen", new Color(32, 178, 170)],
-  ["lightskyblue", new Color(135, 206, 250)],
-  ["lightslategray", new Color(119, 136, 153)],
-  ["lightsteelblue", new Color(176, 196, 222)],
-  ["lightyellow", new Color(255, 255, 224)],
-  ["lime", new Color(0, 255, 0)],
-  ["limegreen", new Color(50, 205, 50)],
-  ["linen", new Color(250, 240, 230)],
-  ["magenta", new Color(255, 0, 255)],
-  ["maroon", new Color(128, 0, 0)],
-  ["mediumaquamarine", new Color(102, 205, 170)],
-  ["mediumblue", new Color(0, 0, 205)],
-  ["mediumorchid", new Color(186, 85, 211)],
-  ["mediumpurple", new Color(147, 112, 219)],
-  ["mediumseagreen", new Color(60, 179, 113)],
-  ["mediumslateblue", new Color(123, 104, 238)],
-  ["mediumspringgreen", new Color(0, 250, 154)],
-  ["mediumturquoise", new Color(72, 209, 204)],
-  ["mediumvioletred", new Color(199, 21, 133)],
-  ["midnightblue", new Color(25, 25, 112)],
-  ["mintcream", new Color(245, 255, 250)],
-  ["mistyrose", new Color(255, 228, 225)],
-  ["moccasin", new Color(255, 228, 181)],
-  ["navajowhite", new Color(255, 222, 173)],
-  ["navy", new Color(0, 0, 128)],
-  ["oldlace", new Color(253, 245, 230)],
-  ["olive", new Color(128, 128, 0)],
-  ["olivedrab", new Color(107, 142, 35)],
-  ["orange", new Color(255, 165, 0)],
-  ["orangered", new Color(255, 69, 0)],
-  ["orchid", new Color(218, 112, 214)],
-  ["palegoldenrod", new Color(238, 232, 170)],
-  ["palegreen", new Color(152, 251, 152)],
-  ["paleturquoise", new Color(175, 238, 238)],
-  ["palevioletred", new Color(219, 112, 147)],
-  ["papayawhip", new Color(255, 239, 213)],
-  ["peachpuff", new Color(255, 218, 185)],
-  ["peru", new Color(205, 133, 63)],
-  ["pink", new Color(255, 192, 203)],
-  ["plum", new Color(221, 160, 221)],
-  ["powderblue", new Color(176, 224, 230)],
-  ["purple", new Color(128, 0, 128)],
-  ["red", new Color(255, 0, 0)],
-  ["rosybrown", new Color(188, 143, 143)],
-  ["royalblue", new Color(65, 105, 225)],
-  ["saddlebrown", new Color(139, 69, 19)],
-  ["salmon", new Color(250, 128, 114)],
-  ["sandybrown", new Color(244, 164, 96)],
-  ["seagreen", new Color(46, 139, 87)],
-  ["seashell", new Color(255, 245, 238)],
-  ["sienna", new Color(160, 82, 45)],
-  ["silver", new Color(192, 192, 192)],
-  ["skyblue", new Color(135, 206, 235)],
-  ["slateblue", new Color(106, 90, 205)],
-  ["slategray", new Color(112, 128, 144)],
-  ["snow", new Color(255, 250, 250)],
-  ["springgreen", new Color(0, 255, 127)],
-  ["steelblue", new Color(70, 130, 180)],
-  ["tan", new Color(210, 180, 140)],
-  ["teal", new Color(0, 128, 128)],
-  ["thistle", new Color(216, 191, 216)],
-  ["tomato", new Color(255, 99, 71)],
-  ["turquoise", new Color(64, 224, 208)],
-  ["violet", new Color(238, 130, 238)],
-  ["wheat", new Color(245, 222, 179)],
-  ["white", new Color(255, 255, 255)],
-  ["whitesmoke", new Color(245, 245, 245)],
-  ["yellow", new Color(255, 255, 0)],
-  ["yellowgreen", new Color(154, 205, 50)]
-]);
-
-// ts/engine/display/Renderer.ts
-var Renderer = class {
-  static defaultArgs = {
-    color: Color.get("black"),
-    rotation: 0
-  };
-};
-
 // ts/math/Matrix.ts
 var Matrix2 = class {
   cells;
@@ -745,6 +748,12 @@ var TranslationBehavior = class {
     this.host.pos.y += vec.y;
   }
 };
+function isPositionable(obj) {
+  return obj?.pos instanceof Vector2;
+}
+function isTranslateable(obj) {
+  return "mover" in obj;
+}
 
 // ts/engine/physic/boundingBox/HitBox.ts
 var HitBox2 = class {
@@ -1284,25 +1293,7 @@ var input = {
   mPos: new Vector2()
 };
 
-// ts/engine/display/htmlCanvas/Canvas.ts
-var Canvas = class {
-  htmlCanvas;
-  width = 0;
-  height = 0;
-  constructor(htmlCanvas) {
-    this.htmlCanvas = htmlCanvas ?? document.createElement("canvas");
-    Input.newEventListener("resize", this, this.updateSize);
-    this.updateSize();
-  }
-  updateSize() {
-    this.htmlCanvas.width = this.htmlCanvas.getBoundingClientRect().width;
-    this.htmlCanvas.height = this.htmlCanvas.getBoundingClientRect().height;
-    this.width = this.htmlCanvas.getBoundingClientRect().width;
-    this.height = this.htmlCanvas.getBoundingClientRect().height;
-  }
-};
-
-// ts/engine/display/htmlCanvas/CanvasCamera.ts
+// ts/engine/display/camera/htmlCanvas/CanvasCamera.ts
 var CanvasCamera = class extends Camera {
   constructor(canvas) {
     super(canvas.width, canvas.height);
@@ -1352,21 +1343,6 @@ var CanvasCamera = class extends Camera {
   }
 };
 
-// ts/engine/display/htmlCanvas/CanvasRenderer.ts
-var CanvasRenderer = class extends Renderer {
-  canvas;
-  constructor(canvas) {
-    super();
-    this.canvas = canvas;
-  }
-  renderLine(pos1, pos2, args) {
-  }
-  renderCircle(pos, radius, args) {
-  }
-  renderRectangle(pos, pos2, args) {
-  }
-};
-
 // ts/engine/entities/SceneObject.ts
 var SceneObject = class {
 };
@@ -1387,7 +1363,7 @@ var GameObject = class extends SceneObject {
 // ts/engine/entities/ControllableObject.ts
 var ControllableObject = class extends GameObject {
   controls = /* @__PURE__ */ new Map();
-  preUpdate(deltaTime) {
+  update(deltaTime, context) {
     this.controls.forEach((controls, key) => {
       if (!Input.isPressed(key)) return;
       for (const control of controls) {
@@ -1411,24 +1387,430 @@ var ControllableObject = class extends GameObject {
   }
 };
 
+// ts/engine/renderer/Color.ts
+var Color = class _Color {
+  static none = new _Color(0, 0, 0, 0);
+  r = 0;
+  g = 0;
+  b = 0;
+  a = 100;
+  constructor(r, g, b, a = 100) {
+    this.r = r - 1 % 255 + 1;
+    this.g = g - 1 % 255 + 1;
+    this.b = b - 1 % 255 + 1;
+    this.a = a - 1 % 100 + 1;
+  }
+  /**
+   * @returns {String} - a String "rgb(r, g, bm a)" with r/g/b/a values for rendering
+   */
+  getRGBString() {
+    return `rgba(${this.r}, ${this.g}, ${this.b}, ${this.a / 100})`;
+  }
+  setR(r) {
+    this.r = (r - 1) % 255 + 1;
+  }
+  setG(g) {
+    this.g = (g - 1) % 255 + 1;
+  }
+  setB(b) {
+    this.b = (b - 1) % 255 + 1;
+  }
+  setA(a) {
+    this.a = (a - 1) % 100 + 1;
+  }
+  // ==========================================================================================
+  // #region static
+  static getRandom() {
+    return new _Color(
+      Math.floor(Math.random() * 256),
+      Math.floor(Math.random() * 256),
+      Math.floor(Math.random() * 256)
+    );
+  }
+  static getRandomNamedColor() {
+    return Util.array.getRandomItem(Array.from(colors.values()));
+  }
+  static get(color) {
+    if (!colors.has(color)) {
+      console.warn(`${color} is not declared!`);
+      return _Color.none;
+    }
+    let c = colors.get(color);
+    if (c == void 0) return _Color.none;
+    return c;
+  }
+  //#endregion
+};
+var colors = /* @__PURE__ */ new Map([
+  ["aliceblue", new Color(240, 248, 255)],
+  ["antiquewhite", new Color(250, 235, 215)],
+  ["aqua", new Color(0, 255, 255)],
+  ["aquamarine", new Color(127, 255, 212)],
+  ["azure", new Color(240, 255, 255)],
+  ["beige", new Color(245, 245, 220)],
+  ["bisque", new Color(255, 228, 196)],
+  ["black", new Color(0, 0, 0)],
+  ["blanchedalmond", new Color(255, 235, 205)],
+  ["blue", new Color(0, 0, 255)],
+  ["blueviolet", new Color(138, 43, 226)],
+  ["brown", new Color(165, 42, 42)],
+  ["burlywood", new Color(222, 184, 135)],
+  ["cadetblue", new Color(95, 158, 160)],
+  ["chartreuse", new Color(127, 255, 0)],
+  ["chocolate", new Color(210, 105, 30)],
+  ["coral", new Color(255, 127, 80)],
+  ["cornflowerblue", new Color(100, 149, 237)],
+  ["cornsilk", new Color(255, 248, 220)],
+  ["crimson", new Color(220, 20, 60)],
+  ["cyan", new Color(0, 255, 255)],
+  ["darkblue", new Color(0, 0, 139)],
+  ["darkcyan", new Color(0, 139, 139)],
+  ["darkgoldenrod", new Color(184, 134, 11)],
+  ["darkgray", new Color(169, 169, 169)],
+  ["darkgreen", new Color(0, 100, 0)],
+  ["darkkhaki", new Color(189, 183, 107)],
+  ["darkmagenta", new Color(139, 0, 139)],
+  ["darkolivegreen", new Color(85, 107, 47)],
+  ["darkorange", new Color(255, 140, 0)],
+  ["darkorchid", new Color(153, 50, 204)],
+  ["darkred", new Color(139, 0, 0)],
+  ["darksalmon", new Color(233, 150, 122)],
+  ["darkseagreen", new Color(143, 188, 143)],
+  ["darkslateblue", new Color(72, 61, 139)],
+  ["darkslategray", new Color(47, 79, 79)],
+  ["darkturquoise", new Color(0, 206, 209)],
+  ["darkviolet", new Color(148, 0, 211)],
+  ["deeppink", new Color(255, 20, 14)],
+  ["deepskyblue", new Color(0, 191, 255)],
+  ["dimgray", new Color(105, 105, 105)],
+  ["dodgerblue", new Color(30, 144, 255)],
+  ["firebrick", new Color(178, 34, 34)],
+  ["floralwhite", new Color(255, 250, 240)],
+  ["forestgreen", new Color(34, 139, 34)],
+  ["fuchsia", new Color(255, 0, 255)],
+  ["gainsboro", new Color(220, 220, 220)],
+  ["ghostwhite", new Color(248, 248, 255)],
+  ["gold", new Color(255, 215, 0)],
+  ["goldenrod", new Color(218, 165, 32)],
+  ["gray", new Color(128, 128, 128)],
+  ["green", new Color(0, 128, 0)],
+  ["greenyellow", new Color(173, 255, 47)],
+  ["honeydew", new Color(240, 255, 240)],
+  ["hotpink", new Color(255, 105, 180)],
+  ["indianred", new Color(205, 92, 92)],
+  ["indigo", new Color(75, 0, 130)],
+  ["ivory", new Color(255, 255, 240)],
+  ["khaki", new Color(240, 230, 140)],
+  ["lavender", new Color(230, 230, 250)],
+  ["lavenderblush", new Color(255, 240, 245)],
+  ["lawngreen", new Color(124, 252, 0)],
+  ["lemonchiffon", new Color(255, 250, 205)],
+  ["lightblue", new Color(173, 216, 230)],
+  ["lightcoral", new Color(240, 128, 128)],
+  ["lightcyan", new Color(224, 255, 255)],
+  ["lightgoldenrodyellow", new Color(250, 250, 210)],
+  ["lightgray", new Color(211, 211, 211)],
+  ["lightgreen", new Color(144, 238, 144)],
+  ["lightpink", new Color(255, 182, 193)],
+  ["lightsalmon", new Color(255, 160, 122)],
+  ["lightseagreen", new Color(32, 178, 170)],
+  ["lightskyblue", new Color(135, 206, 250)],
+  ["lightslategray", new Color(119, 136, 153)],
+  ["lightsteelblue", new Color(176, 196, 222)],
+  ["lightyellow", new Color(255, 255, 224)],
+  ["lime", new Color(0, 255, 0)],
+  ["limegreen", new Color(50, 205, 50)],
+  ["linen", new Color(250, 240, 230)],
+  ["magenta", new Color(255, 0, 255)],
+  ["maroon", new Color(128, 0, 0)],
+  ["mediumaquamarine", new Color(102, 205, 170)],
+  ["mediumblue", new Color(0, 0, 205)],
+  ["mediumorchid", new Color(186, 85, 211)],
+  ["mediumpurple", new Color(147, 112, 219)],
+  ["mediumseagreen", new Color(60, 179, 113)],
+  ["mediumslateblue", new Color(123, 104, 238)],
+  ["mediumspringgreen", new Color(0, 250, 154)],
+  ["mediumturquoise", new Color(72, 209, 204)],
+  ["mediumvioletred", new Color(199, 21, 133)],
+  ["midnightblue", new Color(25, 25, 112)],
+  ["mintcream", new Color(245, 255, 250)],
+  ["mistyrose", new Color(255, 228, 225)],
+  ["moccasin", new Color(255, 228, 181)],
+  ["navajowhite", new Color(255, 222, 173)],
+  ["navy", new Color(0, 0, 128)],
+  ["oldlace", new Color(253, 245, 230)],
+  ["olive", new Color(128, 128, 0)],
+  ["olivedrab", new Color(107, 142, 35)],
+  ["orange", new Color(255, 165, 0)],
+  ["orangered", new Color(255, 69, 0)],
+  ["orchid", new Color(218, 112, 214)],
+  ["palegoldenrod", new Color(238, 232, 170)],
+  ["palegreen", new Color(152, 251, 152)],
+  ["paleturquoise", new Color(175, 238, 238)],
+  ["palevioletred", new Color(219, 112, 147)],
+  ["papayawhip", new Color(255, 239, 213)],
+  ["peachpuff", new Color(255, 218, 185)],
+  ["peru", new Color(205, 133, 63)],
+  ["pink", new Color(255, 192, 203)],
+  ["plum", new Color(221, 160, 221)],
+  ["powderblue", new Color(176, 224, 230)],
+  ["purple", new Color(128, 0, 128)],
+  ["red", new Color(255, 0, 0)],
+  ["rosybrown", new Color(188, 143, 143)],
+  ["royalblue", new Color(65, 105, 225)],
+  ["saddlebrown", new Color(139, 69, 19)],
+  ["salmon", new Color(250, 128, 114)],
+  ["sandybrown", new Color(244, 164, 96)],
+  ["seagreen", new Color(46, 139, 87)],
+  ["seashell", new Color(255, 245, 238)],
+  ["sienna", new Color(160, 82, 45)],
+  ["silver", new Color(192, 192, 192)],
+  ["skyblue", new Color(135, 206, 235)],
+  ["slateblue", new Color(106, 90, 205)],
+  ["slategray", new Color(112, 128, 144)],
+  ["snow", new Color(255, 250, 250)],
+  ["springgreen", new Color(0, 255, 127)],
+  ["steelblue", new Color(70, 130, 180)],
+  ["tan", new Color(210, 180, 140)],
+  ["teal", new Color(0, 128, 128)],
+  ["thistle", new Color(216, 191, 216)],
+  ["tomato", new Color(255, 99, 71)],
+  ["turquoise", new Color(64, 224, 208)],
+  ["violet", new Color(238, 130, 238)],
+  ["wheat", new Color(245, 222, 179)],
+  ["white", new Color(255, 255, 255)],
+  ["whitesmoke", new Color(245, 245, 245)],
+  ["yellow", new Color(255, 255, 0)],
+  ["yellowgreen", new Color(154, 205, 50)]
+]);
+
+// ts/engine/renderer/Renderer.ts
+var Renderer = class {
+  static defaultArgs = {
+    color: Color.get("black"),
+    rotation: 0
+  };
+};
+
+// ts/engine/renderer/htmlCanvas/Canvas.ts
+var Canvas = class {
+  htmlCanvas;
+  width = 0;
+  height = 0;
+  constructor(htmlCanvas) {
+    this.htmlCanvas = htmlCanvas ?? document.createElement("canvas");
+    Input.newEventListener("resize", this, this.updateSize);
+    this.updateSize();
+  }
+  updateSize() {
+    this.htmlCanvas.width = this.htmlCanvas.getBoundingClientRect().width;
+    this.htmlCanvas.height = this.htmlCanvas.getBoundingClientRect().height;
+    this.width = this.htmlCanvas.getBoundingClientRect().width;
+    this.height = this.htmlCanvas.getBoundingClientRect().height;
+  }
+};
+
+// ts/engine/renderer/htmlCanvas/CanvasRenderer.ts
+var CanvasRenderer = class extends Renderer {
+  canvas;
+  constructor(canvas) {
+    super();
+    this.canvas = canvas;
+  }
+  clear() {
+  }
+  renderLine(pos1, pos2, args) {
+  }
+  renderCircle(pos, radius, args) {
+  }
+  renderRectangle(pos, pos2, args) {
+  }
+};
+
 // ts/engine/scenes/Scene.ts
 var Scene = class {
 };
 
-// ts/engine/scenes/World.ts
-var World = class {
-  objects = /* @__PURE__ */ new Set();
+// ts/engine/scenes/ObjectScene.ts
+var ObjectScene = class extends Scene {
+  updateables = [];
+  renderables = [];
   addObject(obj) {
-    this.objects.add(obj);
+    this.updateables.push(obj);
+    if (typeof obj.render === "function") {
+      this.renderables.push(obj);
+    }
   }
-  fixedUpdate(dt) {
-    for (const obj of this.objects) obj.fixedUpdate(dt);
+  removeObject(obj) {
+    this.updateables = this.updateables.filter((o) => o !== obj);
+    if (typeof obj.render === "function") {
+      this.renderables = this.renderables.filter((o) => o !== obj);
+    }
   }
-  update(dt) {
-    for (const obj of this.objects) obj.update(dt);
+  fixedUpdate(dt, context) {
+    for (const obj of this.updateables) {
+      obj.fixedUpdate?.(dt, context);
+    }
+  }
+  update(dt, context) {
+    for (const obj of this.updateables) {
+      if (obj.shouldUpdate?.() !== false) {
+        obj.update(dt, context);
+      }
+    }
   }
   render(renderer) {
-    for (const obj of this.objects) obj.render(renderer);
+    for (const obj of this.renderables) {
+      if (obj.shouldRender?.() !== false) {
+        obj.render(renderer);
+      }
+    }
+  }
+  clearObjects() {
+    this.updateables = [];
+    this.renderables = [];
+  }
+};
+
+// ts/engine/spacial/uniformGrid.ts
+var UniformGrid = class {
+  cellSize;
+  cells = /* @__PURE__ */ new Map();
+  constructor(cellSize = 64) {
+    this.cellSize = cellSize;
+  }
+  cellKey(pos) {
+    return `${Math.floor(pos.x / this.cellSize)},${Math.floor(pos.y / this.cellSize)}`;
+  }
+  insert(obj) {
+    const key = this.cellKey(obj.pos);
+    if (!this.cells.has(key)) {
+      this.cells.set(key, /* @__PURE__ */ new Set());
+    }
+    this.cells.get(key).add(obj);
+  }
+  remove(obj) {
+    const key = this.cellKey(obj.pos);
+    this.cells.get(key)?.delete(obj);
+  }
+  update(obj) {
+    this.remove(obj);
+    this.insert(obj);
+  }
+  queryRange(min, max) {
+    const results = [];
+    const minCellX = Math.floor(min.x / this.cellSize);
+    const minCellY = Math.floor(min.y / this.cellSize);
+    const maxCellX = Math.floor(max.x / this.cellSize);
+    const maxCellY = Math.floor(max.y / this.cellSize);
+    for (let cx = minCellX; cx <= maxCellX; cx++) {
+      for (let cy = minCellY; cy <= maxCellY; cy++) {
+        const key = `${cx},${cy}`;
+        if (this.cells.has(key)) {
+          for (const obj of this.cells.get(key)) {
+            if (obj.pos.x >= min.x && obj.pos.x <= max.x && obj.pos.y >= min.y && obj.pos.y <= max.y) {
+              results.push(obj);
+            }
+          }
+        }
+      }
+    }
+    return results;
+  }
+  clear() {
+    this.cells.clear();
+  }
+};
+
+// ts/engine/spacial/kdTreeIndex.ts
+var KDTreeIndex = class {
+  tree;
+  constructor(items = []) {
+    this.tree = new KDTree({
+      getPoint: (obj) => [obj.pos.x, obj.pos.y]
+    }, items);
+  }
+  insert(obj, dynamic = false) {
+    this.tree.insert(obj);
+  }
+  remove(obj) {
+    this.tree.remove(obj);
+  }
+  update(obj) {
+    this.remove(obj);
+    this.insert(obj);
+  }
+  queryRange(min, max) {
+    return this.tree.queryRange([min.x, min.y], [max.x, max.y]);
+  }
+  clear() {
+    this.tree.clear();
+  }
+};
+
+// ts/engine/spacial/hybridSpacialIndex.ts
+var HybridSpatialIndex = class {
+  staticIndex;
+  dynamicIndex;
+  constructor(cellSize = 64, staticItems = []) {
+    this.staticIndex = new KDTreeIndex(staticItems);
+    this.dynamicIndex = new UniformGrid(cellSize);
+  }
+  insert(obj, dynamic = null) {
+    if (dynamic === null) {
+      dynamic = isTranslateable(obj);
+    }
+    if (dynamic) {
+      this.dynamicIndex.insert(obj);
+    } else {
+      this.staticIndex.insert(obj);
+    }
+  }
+  remove(obj) {
+    this.dynamicIndex.remove(obj);
+    this.staticIndex.remove(obj);
+  }
+  update(obj) {
+    this.dynamicIndex.update(obj);
+  }
+  queryRange(min, max) {
+    return [
+      ...this.staticIndex.queryRange(min, max),
+      ...this.dynamicIndex.queryRange(min, max)
+    ];
+  }
+  clear() {
+    this.staticIndex.clear();
+    this.dynamicIndex.clear();
+  }
+};
+
+// ts/engine/scenes/WorldScene.ts
+var WorldScene = class extends ObjectScene {
+  spatialIndex = new HybridSpatialIndex();
+  addObject(obj) {
+    super.addObject(obj);
+    if (isPositionable(obj)) {
+      this.spatialIndex.insert(obj, null);
+    }
+  }
+  removeObject(obj) {
+    super.removeObject(obj);
+    if (isPositionable(obj)) {
+      this.spatialIndex.remove(obj);
+    }
+  }
+  updateObjectPosition(obj) {
+    this.spatialIndex.update(obj);
+  }
+  getObjectsInArea(area) {
+    const min = area.pos;
+    const max = new Vector2(area.pos.x + area.size.x, area.pos.y + area.size.y);
+    return this.spatialIndex.queryRange(min, max);
+  }
+  clearObjects() {
+    super.clearObjects();
+    this.spatialIndex.clear();
   }
 };
 
@@ -1464,8 +1846,12 @@ export {
   GameManager,
   GameObject,
   HitBox2 as HitBox,
+  HybridSpatialIndex,
   Input,
+  KDTree,
+  KDTreeIndex,
   Matrix2,
+  ObjectScene,
   Polygon2,
   RealTimeManager,
   Rectangle,
@@ -1482,10 +1868,13 @@ export {
   Triangulation,
   TurnBasedManager,
   TwoKeyMap,
+  UniformGrid,
   Util,
   Vector2,
-  World,
+  WorldScene,
   Zoom,
+  isPositionable,
+  isTranslateable,
   math,
   vector
 };
