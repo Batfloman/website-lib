@@ -1,3 +1,4 @@
 // AUTO-GENERATED
+export * from './ObjectScene';
 export * from './Scene';
-export * from './World';
+export * from './WorldScene';

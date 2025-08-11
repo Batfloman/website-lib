@@ -42,4 +42,9 @@ export class ObjectScene extends Scene {
 			}
 		}
 	}
+
+	clearObjects(): void {
+		this.updateables = []
+		this.renderables = []
+	}
 }

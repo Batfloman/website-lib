@@ -6,3 +6,4 @@ export * from './physic/index';
 export * from './propertys/index';
 export * from './renderer/index';
 export * from './scenes/index';
+export * from './spacial/index';

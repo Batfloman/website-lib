@@ -1,7 +1,10 @@
 import { Vector2 } from "math";
 
-export interface ITranslateable {
+export interface IPositionable {
 	pos: Vector2;
+}
+
+export interface ITranslateable extends IPositionable {
 	mover: TranslationBehavior;
 }
 
@@ -20,4 +23,12 @@ export class TranslationBehavior {
 		this.host.pos.x += vec.x;
 		this.host.pos.y += vec.y;
 	}
+}
+
+export function isPositionable(obj: any): obj is IPositionable {
+	return obj?.pos instanceof Vector2;
+}
+
+export function isTranslateable(obj: any): obj is ITranslateable {
+	return "mover" in obj;
 }
