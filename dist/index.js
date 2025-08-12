@@ -299,16 +299,14 @@ var SceneManager = class {
     }
     this.activeScenes = [];
   }
-  fixedUpdate(dt, context) {
+  fixedUpdate(dt) {
     for (const scene of this.activeScenes) {
-      const sceneContext = { ...context, scene };
-      scene.fixedUpdate?.(dt, sceneContext);
+      scene.fixedUpdate?.(dt);
     }
   }
-  update(dt, context) {
+  update(dt) {
     for (const scene of this.activeScenes) {
-      const sceneContext = { ...context, scene };
-      scene.update(dt, sceneContext);
+      scene.update(dt);
     }
   }
   render(renderer) {
@@ -327,12 +325,10 @@ var GameManager = class {
     this.sceneManager = new SceneManager();
   }
   fixedUpdate(dt) {
-    const context = { game: this };
-    this.sceneManager.fixedUpdate(dt, context);
+    this.sceneManager.fixedUpdate(dt);
   }
   update(dt) {
-    const context = { game: this };
-    this.sceneManager.update(dt, context);
+    this.sceneManager.update(dt);
   }
   render(renderer) {
     this.sceneManager.render(renderer);
@@ -1345,6 +1341,13 @@ var CanvasCamera = class extends Camera {
 
 // ts/engine/entities/SceneObject.ts
 var SceneObject = class {
+  scene = null;
+  addedToScene(scene) {
+    this.scene = scene;
+  }
+  removedFromScene() {
+    this.scene = null;
+  }
 };
 
 // ts/engine/entities/GameObject.ts
@@ -1363,7 +1366,7 @@ var GameObject = class extends SceneObject {
 // ts/engine/entities/ControllableObject.ts
 var ControllableObject = class extends GameObject {
   controls = /* @__PURE__ */ new Map();
-  update(deltaTime, context) {
+  update(deltaTime) {
     this.controls.forEach((controls, key) => {
       if (!Input.isPressed(key)) return;
       for (const control of controls) {
@@ -1640,22 +1643,24 @@ var ObjectScene = class extends Scene {
     if (typeof obj.render === "function") {
       this.renderables.push(obj);
     }
+    obj.addedToScene(this);
   }
   removeObject(obj) {
     this.updateables = this.updateables.filter((o) => o !== obj);
     if (typeof obj.render === "function") {
       this.renderables = this.renderables.filter((o) => o !== obj);
     }
+    obj.removedFromScene();
   }
-  fixedUpdate(dt, context) {
+  fixedUpdate(dt) {
     for (const obj of this.updateables) {
-      obj.fixedUpdate?.(dt, context);
+      obj.fixedUpdate?.(dt);
     }
   }
-  update(dt, context) {
+  update(dt) {
     for (const obj of this.updateables) {
       if (obj.shouldUpdate?.() !== false) {
-        obj.update(dt, context);
+        obj.update(dt);
       }
     }
   }

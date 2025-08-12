@@ -273,10 +273,10 @@ declare class CollideableBehaviour {
     translatePoints(): Vector2[];
 }
 
-interface IUpdateable<TContext = undefined> {
-    update(deltaTime: number, context: TContext): void;
+interface IUpdateable {
+    update(deltaTime: number): void;
     shouldUpdate?(): boolean;
-    fixedUpdate?(dt: number, context: TContext): void;
+    fixedUpdate?(dt: number): void;
 }
 
 interface IPreUpdateable extends IUpdateable {
@@ -301,28 +301,77 @@ declare class ScaleBehavior {
     setScale(scale: number): void;
 }
 
-declare abstract class Scene implements IUpdateable<SceneContext>, IRenderable {
+declare abstract class Scene implements IUpdateable, IRenderable {
     onLoad?(): void;
     onUnload?(): void;
-    abstract fixedUpdate?(dt: number, context: SceneContext): void;
-    abstract update(dt: number, context: SceneContext): void;
+    abstract fixedUpdate?(dt: number): void;
+    abstract update(dt: number): void;
     abstract render(renderer: Renderer): void;
+}
+
+declare abstract class SceneObject implements IUpdateable {
+    protected scene: Scene | null;
+    abstract fixedUpdate?(dt: number): void;
+    abstract update(deltaTime: number): void;
+    abstract shouldUpdate(): boolean;
+    addedToScene(scene: Scene): void;
+    removedFromScene(): void;
+}
+
+declare abstract class GameObject extends SceneObject implements IMoveable, IRenderable {
+    abstract pos: Vector2;
+    mover: TranslationBehavior;
+    orientation: number;
+    rotator: RotateBehaviour;
+    abstract fixedUpdate(dt: number): void;
+    abstract update(deltaTime: number): void;
+    shouldUpdate(): boolean;
+    abstract render(renderer: Renderer): void;
+    shouldRender(): boolean;
+}
+
+type inputKey = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "shift" | "space" | "tab" | "alt" | "strg" | "altRight" | "leftclick" | "rightclick" | "middleclick" | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "up" | "left" | "down" | "right";
+
+declare class Input {
+    static eventListener: Map<string, Listener[]>;
+    static pressedKeys: inputKey[];
+    static mPos: Vector2;
+    static staticConstructor(): void;
+    static newEventListener<K extends keyof WindowEventMap>(event: K, obj: Object, func: Function): void;
+    static removeEventListener<K extends keyof WindowEventMap>(event: K, obj: Object): void;
+    private static notifyOfEvent;
+    private static keyDown;
+    private static keyUp;
+    static getInputKey(key: string): inputKey | undefined;
+    static isLeftClick(): boolean;
+    static isPressed(key: inputKey): boolean;
+}
+declare class Listener {
+    obj: Object;
+    func: Function;
+    constructor(obj: Object, func: Function);
+}
+
+declare abstract class ControllableObject extends GameObject {
+    private controls;
+    update(deltaTime: number): void;
+    addControl(key: inputKey, func: Function, max_activation_Interval?: number): void;
 }
 
 declare class ObjectScene extends Scene {
     private updateables;
     private renderables;
-    addObject(obj: IUpdateable<SceneContext> & Partial<IRenderable>): void;
-    removeObject(obj: IUpdateable<SceneContext> & Partial<IRenderable>): void;
-    fixedUpdate(dt: number, context: SceneContext): void;
-    update(dt: number, context: SceneContext): void;
+    addObject(obj: SceneObject & Partial<IRenderable>): void;
+    removeObject(obj: SceneObject & Partial<IRenderable>): void;
+    fixedUpdate(dt: number): void;
+    update(dt: number): void;
     render(renderer: Renderer): void;
     clearObjects(): void;
 }
 
 declare class WorldScene extends ObjectScene {
     private spatialIndex;
-    addObject(obj: IUpdateable<SceneContext> & Partial<IRenderable> & Partial<IPositionable>): void;
+    addObject(obj: SceneObject & Partial<IRenderable> & Partial<IPositionable>): void;
     removeObject(obj: any): void;
     updateObjectPosition(obj: IPositionable): void;
     getObjectsInArea(area: {
@@ -332,18 +381,15 @@ declare class WorldScene extends ObjectScene {
     clearObjects(): void;
 }
 
-interface SceneContext extends GameContext {
-    scene: Scene;
-}
-declare class SceneManager implements IUpdateable<GameContext> {
+declare class SceneManager implements IUpdateable {
     private sceneMap;
     private activeScenes;
     addScene(name: string, scene: Scene): void;
     enableScene(name: string): void;
     disableScene(name: string): void;
     clearScenes(): void;
-    fixedUpdate(dt: number, context: GameContext): void;
-    update(dt: number, context: GameContext): void;
+    fixedUpdate(dt: number): void;
+    update(dt: number): void;
     render(renderer: Renderer): void;
 }
 
@@ -354,9 +400,6 @@ declare abstract class GameManager implements IUpdateable {
     fixedUpdate(dt: number): void;
     update(dt: number): void;
     render(renderer: Renderer): void;
-}
-interface GameContext {
-    game: GameManager;
 }
 
 declare class RealTimeManager extends GameManager {
@@ -405,52 +448,6 @@ declare class CanvasCamera extends Camera {
     private mouseMove;
     private previousTouchPos;
     private touchMove;
-}
-
-declare abstract class SceneObject implements IUpdateable<SceneContext> {
-    abstract fixedUpdate?(dt: number, context: SceneContext): void;
-    abstract update(deltaTime: number, context: SceneContext): void;
-    abstract shouldUpdate(): boolean;
-}
-
-declare abstract class GameObject extends SceneObject implements IMoveable, IRenderable {
-    abstract pos: Vector2;
-    mover: TranslationBehavior;
-    orientation: number;
-    rotator: RotateBehaviour;
-    abstract fixedUpdate(dt: number, context: SceneContext): void;
-    abstract update(deltaTime: number, context: SceneContext): void;
-    shouldUpdate(): boolean;
-    abstract render(renderer: Renderer): void;
-    shouldRender(): boolean;
-}
-
-type inputKey = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "shift" | "space" | "tab" | "alt" | "strg" | "altRight" | "leftclick" | "rightclick" | "middleclick" | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "up" | "left" | "down" | "right";
-
-declare class Input {
-    static eventListener: Map<string, Listener[]>;
-    static pressedKeys: inputKey[];
-    static mPos: Vector2;
-    static staticConstructor(): void;
-    static newEventListener<K extends keyof WindowEventMap>(event: K, obj: Object, func: Function): void;
-    static removeEventListener<K extends keyof WindowEventMap>(event: K, obj: Object): void;
-    private static notifyOfEvent;
-    private static keyDown;
-    private static keyUp;
-    static getInputKey(key: string): inputKey | undefined;
-    static isLeftClick(): boolean;
-    static isPressed(key: inputKey): boolean;
-}
-declare class Listener {
-    obj: Object;
-    func: Function;
-    constructor(obj: Object, func: Function);
-}
-
-declare abstract class ControllableObject extends GameObject {
-    private controls;
-    update(deltaTime: number, context: SceneContext): void;
-    addControl(key: inputKey, func: Function, max_activation_Interval?: number): void;
 }
 
 interface SpatialIndex<T extends IPositionable> {
@@ -535,4 +532,4 @@ declare const Util: {
     object: typeof object;
 };
 
-export { Camera, Canvas, CanvasCamera, CanvasRenderer, Circle, CollideableBehaviour, Collision, Color, ControllableObject, type GameContext, GameLoop, GameManager, GameObject, HitBox, HybridSpatialIndex, type ICollideable, type IMoveable, type IPositionable, type IPreUpdateable, type IRenderable, type IRotateable, type IScaleable, type ITranslateable, type IUpdateable, Input, type KDNode, KDTree, KDTreeIndex, type KDTreeOptions, Matrix2, ObjectScene, Polygon2, type PolygonWinding, RealTimeManager, Rectangle, type RenderArgs, Renderer, RotateBehaviour, SAT, ScaleBehavior, Scene, type SceneContext, SceneManager, SceneObject, type SpatialIndex, Thread, TranslationBehavior, Triangle, Triangulation, TurnBasedManager, TwoKeyMap, UniformGrid, Util, Vector2, WorldScene, Zoom, type inputKey, isPositionable, isTranslateable, math, vector };
+export { Camera, Canvas, CanvasCamera, CanvasRenderer, Circle, CollideableBehaviour, Collision, Color, ControllableObject, GameLoop, GameManager, GameObject, HitBox, HybridSpatialIndex, type ICollideable, type IMoveable, type IPositionable, type IPreUpdateable, type IRenderable, type IRotateable, type IScaleable, type ITranslateable, type IUpdateable, Input, type KDNode, KDTree, KDTreeIndex, type KDTreeOptions, Matrix2, ObjectScene, Polygon2, type PolygonWinding, RealTimeManager, Rectangle, type RenderArgs, Renderer, RotateBehaviour, SAT, ScaleBehavior, Scene, SceneManager, SceneObject, type SpatialIndex, Thread, TranslationBehavior, Triangle, Triangulation, TurnBasedManager, TwoKeyMap, UniformGrid, Util, Vector2, WorldScene, Zoom, type inputKey, isPositionable, isTranslateable, math, vector };
