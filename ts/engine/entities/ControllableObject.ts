@@ -1,7 +1,5 @@
-import { IPreUpdateable } from "engine/propertys/IPreUpdateable";
 import { GameObject } from "./GameObject";
 import { Input, inputKey } from "input";
-import { SceneContext } from "engine/core";
 
 type Control = {
 	func: Function,
@@ -12,7 +10,7 @@ type Control = {
 export abstract class ControllableObject extends GameObject {
 	private controls: Map<inputKey, Control[]> = new Map();
 
-	update(deltaTime: number, context: SceneContext): void {
+	update(deltaTime: number): void {
 		this.controls.forEach((controls, key) => {
 			if (!Input.isPressed(key)) return;
 

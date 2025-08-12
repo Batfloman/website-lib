@@ -13,20 +13,14 @@ export abstract class GameManager implements IUpdateable {
 	}
 
 	fixedUpdate(dt: number): void {
-		const context: GameContext = { game: this }
-		this.sceneManager.fixedUpdate(dt, context);
+		this.sceneManager.fixedUpdate(dt);
 	}
 
 	update(dt: number): void {
-		const context: GameContext = { game: this }
-		this.sceneManager.update(dt, context);
+		this.sceneManager.update(dt);
 	}
 
 	render(renderer: Renderer): void {
 		this.sceneManager.render(renderer);
 	}
-}
-
-export interface GameContext {
-	game: GameManager;
 }

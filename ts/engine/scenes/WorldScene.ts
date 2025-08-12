@@ -1,25 +1,26 @@
 import { ObjectScene } from "./ObjectScene";
-import { SceneContext } from "engine/core";
-import { IUpdateable, IRenderable, IPositionable, isPositionable } from "engine/propertys";
+import { IRenderable, IPositionable, isPositionable } from "engine/propertys";
 import { Vector2 } from "math";
 import { HybridSpatialIndex } from "engine/spacial";
+import { SceneObject } from "engine/entities";
 
 export class WorldScene extends ObjectScene {
 	private spatialIndex = new HybridSpatialIndex<IPositionable>();
 
 	addObject(
-		obj: IUpdateable<SceneContext> & Partial<IRenderable> & Partial<IPositionable>
+		obj: SceneObject & Partial<IRenderable> & Partial<IPositionable>
 	) {
 		super.addObject(obj);
 
 		if (isPositionable(obj)) {
-			// null = auto-detect based on mover property
+			// null = auto-detect based on `mover` property from ITranslateable
 			this.spatialIndex.insert(obj as IPositionable, null);
 		}
 	}
 
 	removeObject(obj: any) {
 		super.removeObject(obj);
+
 		if (isPositionable(obj)) {
 			this.spatialIndex.remove(obj as IPositionable);
 		}

@@ -1,36 +1,38 @@
 import { Scene } from "./Scene";
-import { IUpdateable, IRenderable } from "engine/propertys";
-import { SceneContext } from "engine/core";
+import { IRenderable } from "engine/propertys";
 import { Renderer } from "engine/renderer";
+import { SceneObject } from "engine/entities";
 
 export class ObjectScene extends Scene {
-	private updateables: IUpdateable<SceneContext>[] = [];
+	private updateables: SceneObject[] = [];
 	private renderables: IRenderable[] = [];
 
-	addObject(obj: IUpdateable<SceneContext> & Partial<IRenderable>) {
+	addObject(obj: SceneObject & Partial<IRenderable>) {
 		this.updateables.push(obj);
 		if (typeof obj.render === "function") {
 			this.renderables.push(obj as IRenderable);
 		}
+		obj.addedToScene(this)
 	}
 
-	removeObject(obj: IUpdateable<SceneContext> & Partial<IRenderable>) {
+	removeObject(obj: SceneObject & Partial<IRenderable>) {
 		this.updateables = this.updateables.filter(o => o !== obj);
 		if (typeof obj.render === "function") {
 			this.renderables = this.renderables.filter(o => o !== obj);
 		}
+		obj.removedFromScene();
 	}
 
-	fixedUpdate(dt: number, context: SceneContext) {
+	fixedUpdate(dt: number) {
 		for (const obj of this.updateables) {
-			obj.fixedUpdate?.(dt, context);
+			obj.fixedUpdate?.(dt);
 		}
 	}
 
-	update(dt: number, context: SceneContext) {
+	update(dt: number) {
 		for (const obj of this.updateables) {
 			if (obj.shouldUpdate?.() !== false) {
-				obj.update(dt, context);
+				obj.update(dt);
 			}
 		}
 	}
