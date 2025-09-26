@@ -59,6 +59,9 @@ export class Vector2 {
   getMagnitude(): number {
     return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
   }
+  getMagnitudeSq(): number {
+    return Math.pow(this.x, 2) + Math.pow(this.y, 2);
+  }
 
   getUnitVec(): Vector2 {
     const length = this.getMagnitude()
