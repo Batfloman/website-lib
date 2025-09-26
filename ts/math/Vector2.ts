@@ -9,17 +9,36 @@ export class Vector2 {
     this.y = !y ? 0 : y;
   }
 
+  // --- Basic Operations ---
+
   add(vec2: Vector2): Vector2 {
     return new Vector2(this.x + vec2.x, this.y + vec2.y);
+  }
+  add_in_place(vec: Vector2): Vector2 {
+    this.x += vec.x;
+    this.y += vec.y;
+    return this
   }
 
   subtract(vec2: Vector2): Vector2 {
     return new Vector2(this.x - vec2.x, this.y - vec2.y);
   }
+  subtract_in_place(vec: Vector2): Vector2 {
+    this.x -= vec.x;
+    this.y -= vec.y;
+    return this
+  }
 
-  scale(scalar: number): Vector2 {
+  scaleBy(scalar: number): Vector2 {
     return new Vector2(this.x * scalar, this.y * scalar);
   }
+  scaleBy_in_place(scalar: number): Vector2 {
+    this.x *= scalar;
+    this.y *= scalar;
+    return this;
+  }
+
+  // --- Vector Operations ---
 
   dotProduct(vec2: Vector2): number {
     return this.x * vec2.x + this.y * vec2.y;
@@ -39,6 +58,11 @@ export class Vector2 {
 
   getMagnitude(): number {
     return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+  }
+
+  getUnitVec(): Vector2 {
+    const length = this.getMagnitude()
+    return this.scaleBy(1 / length);
   }
 
   angle(vec2: Vector2): number {

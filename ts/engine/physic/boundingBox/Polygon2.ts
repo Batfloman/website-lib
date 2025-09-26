@@ -32,7 +32,7 @@ export class Polygon2 extends HitBox {
       center = center.add(point);
     }
 
-    return center.scale(1 / this.model.length);
+    return center.scaleBy(1 / this.model.length);
   }
 
   /**
