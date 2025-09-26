@@ -46,6 +46,7 @@ export class SceneManager implements IUpdateable {
 	}
 
 	render(renderer: Renderer) {
+		renderer.clear()
 		for (const scene of this.activeScenes) {
 			scene.render(renderer);
 		}
