@@ -16,7 +16,7 @@ export interface Controllable {
 }
 
 // --- Unique runtime identifier ---
-const ControllableTag = Symbol("Controllable");
+export const ControllableTag = Symbol("Controllable");
 
 // --- Runtime type guard ---
 export function isControllable(obj: any): obj is Controllable {
@@ -27,7 +27,7 @@ export function isControllable(obj: any): obj is Controllable {
 export function ControllableTrait<TBase extends Constructor | AbstractConstructor>(Base: TBase) {
 	return class ControllableImpl extends Base implements Controllable {
 		// Hidden runtime marker for trait detection
-		[ControllableTag] = true;
+		declare readonly [ControllableTag] = true;
 
 		controlls: Map<inputKey, Control[]> = new Map();
 

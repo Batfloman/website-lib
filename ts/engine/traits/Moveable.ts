@@ -10,7 +10,7 @@ export interface Moveable {
 }
 
 // --- Unique runtime identifier ---
-const MoveableTag = Symbol("Moveable");
+export const MoveableTag = Symbol("Moveable");
 
 // --- Runtime type guard ---
 export function isMoveable(obj: any): obj is Moveable {
@@ -18,10 +18,11 @@ export function isMoveable(obj: any): obj is Moveable {
 }
 
 // --- Mixin function ---
+
 export function MoveableTrait<TBase extends Constructor | AbstractConstructor>(Base: TBase) {
 	return class MoveableImpl extends Base implements Moveable {
 		// Hidden runtime marker for trait detection
-		[MoveableTag] = true;
+		declare readonly [MoveableTag]: true;
 
 		// Default position (0,0)
 		position: Vector2 = new Vector2(0, 0);

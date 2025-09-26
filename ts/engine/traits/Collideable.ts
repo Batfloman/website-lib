@@ -8,7 +8,7 @@ export interface Collideable<THitBox extends HitBox> {
 }
 
 // --- Unique runtime identifier ---
-const CollideableTag = Symbol("Collideable");
+export const CollideableTag = Symbol("Collideable");
 
 // --- Runtime type guard ---
 export function isCollideable<THitBox extends HitBox = HitBox>(obj: any): obj is Collideable<THitBox> {
@@ -21,7 +21,7 @@ export function CollideableTrait<
 	TBase extends Constructor
 >(Base: TBase) {
 	abstract class CollideableImpl extends Base implements Collideable<THitBox> {
-		[CollideableTag] = true;
+		declare readonly [CollideableTag] = true;
 
 		abstract hitbox: THitBox;
 	}

@@ -7,7 +7,7 @@ export interface Rotateable {
 }
 
 // --- Unique runtime identifier ---
-const RotateableTag = Symbol("Rotateable");
+export const RotateableTag = Symbol("Rotateable");
 
 // --- Runtime type guard ---
 export function isRotateable(obj: any): obj is Rotateable {
@@ -18,7 +18,7 @@ export function isRotateable(obj: any): obj is Rotateable {
 export function RotateableTrait<TBase extends Constructor | AbstractConstructor>(Base: TBase) {
 	return class MoveableImpl extends Base implements Rotateable {
 		// Hidden runtime marker for trait detection
-		[RotateableTag] = true;
+		declare readonly [RotateableTag] = true;
 
 		rotation = 0;
 	};

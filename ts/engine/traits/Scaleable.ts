@@ -9,7 +9,7 @@ export interface Scaleable {
 }
 
 // --- Unique runtime identifier ---
-const ScaleableTag = Symbol("Scaleable");
+export const ScaleableTag = Symbol("Scaleable");
 
 // --- Runtime type guard ---
 export function isScaleable(obj: any): obj is Scaleable {
@@ -20,7 +20,7 @@ export function isScaleable(obj: any): obj is Scaleable {
 export function ScaleableTrait<TBase extends Constructor | AbstractConstructor>(Base: TBase) {
 	return class ScaleableImpl extends Base implements Scaleable {
 		// Hidden runtime marker for trait detection
-		[ScaleableTag] = true;
+		declare readonly [ScaleableTag] = true;
 
 		// Default position (0,0)
 		scale: number = 1;
