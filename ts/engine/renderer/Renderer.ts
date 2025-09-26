@@ -3,14 +3,14 @@ import { Color } from "./Color";
 
 export type RenderArgs = {
 	rotation?: number,
-	strokeStyle?: string; // Linienfarbe
-	fillStyle?: string;   // Füllfarbe
-	lineWidth?: number;   // Linienbreite
+	strokeStyle?: string | Color;
+	fillStyle?: string | Color;
+	lineWidth?: number;
 }
 
 export abstract class Renderer {
 	static defaultArgs: RenderArgs = {
-		strokeStyle: Color.get("black").getRGBString(),
+		strokeStyle: Color.get("black"),
 		rotation: 0,
 	}
 

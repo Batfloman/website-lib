@@ -1,6 +1,11 @@
 import { Vector2 } from "math";
 import { Renderer, RenderArgs } from "../Renderer";
 import { Canvas } from "./Canvas";
+import { Color } from "../Color";
+
+function getColorStr(color: string | Color) {
+	return (color instanceof Color) ? color.getRGBString() : color;
+}
 
 export class CanvasRenderer extends Renderer {
 	protected canvas: Canvas;
@@ -26,7 +31,7 @@ export class CanvasRenderer extends Renderer {
 		ctx.beginPath();
 		ctx.moveTo(pos1.x, pos1.y);
 		ctx.lineTo(pos2.x, pos2.y);
-		if (args?.strokeStyle) ctx.strokeStyle = args.strokeStyle;
+		if (args?.strokeStyle) ctx.strokeStyle = getColorStr(args.strokeStyle)
 		if (args?.lineWidth) ctx.lineWidth = args.lineWidth;
 		ctx.stroke();
 	}
@@ -36,11 +41,11 @@ export class CanvasRenderer extends Renderer {
 		ctx.beginPath();
 		ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
 		if (args?.fillStyle) {
-			ctx.fillStyle = args.fillStyle;
+			ctx.fillStyle = getColorStr(args.fillStyle);
 			ctx.fill();
 		}
 		if (args?.strokeStyle) {
-			ctx.strokeStyle = args.strokeStyle;
+			ctx.strokeStyle = getColorStr(args.strokeStyle);
 			if (args.lineWidth) ctx.lineWidth = args.lineWidth;
 			ctx.stroke();
 		}
@@ -61,17 +66,16 @@ export class CanvasRenderer extends Renderer {
 		const y = center.y - height / 2;
 
 		if (args?.fillStyle) {
-			ctx.fillStyle = args.fillStyle;
+			ctx.fillStyle = getColorStr(args.fillStyle);
 			ctx.fillRect(x, y, width, height);
 		}
 
 		if (args?.strokeStyle) {
-			ctx.strokeStyle = args.strokeStyle;
+			ctx.strokeStyle = getColorStr(args.strokeStyle);
 			if (args.lineWidth) ctx.lineWidth = args.lineWidth;
 			ctx.strokeRect(x, y, width, height);
 		}
 
 		ctx.restore(); // Restore canvas state
 	}
-
 }
