@@ -2,8 +2,9 @@ import { Renderer } from "engine/renderer";
 import { IMoveable, IRenderable, TranslationBehavior, RotateBehaviour } from "engine/propertys";
 import { SceneObject } from "./SceneObject";
 import { Vector2 } from "math";
+import { Scene } from "engine/scenes";
 
-export abstract class GameObject extends SceneObject implements IRenderable {
+export abstract class GameObject<TScene extends Scene = Scene> extends SceneObject<TScene> implements IRenderable {
 	abstract render(renderer: Renderer): void;
 	shouldRender(): boolean {
 		return true;
