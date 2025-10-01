@@ -27,7 +27,7 @@ export function isControllable(obj: any): obj is Controllable {
 export function ControllableTrait<TBase extends Constructor | AbstractConstructor>(Base: TBase) {
 	return class ControllableImpl extends Base implements Controllable {
 		// Hidden runtime marker for trait detection
-		declare readonly [ControllableTag] = true;
+		readonly [ControllableTag] = true;
 
 		controlls: Map<inputKey, Control[]> = new Map();
 

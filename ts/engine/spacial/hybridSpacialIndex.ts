@@ -1,10 +1,10 @@
-import { IPositionable, isTranslateable } from "engine/propertys";
+import { Positionable, isMoveable } from "engine/traits";
 import { SpatialIndex } from "./spacialIndex";
 import { UniformGrid } from "./uniformGrid";
 import { KDTreeIndex } from "./kdTreeIndex";
 import { Vector2 } from "math";
 
-export class HybridSpatialIndex<T extends IPositionable> implements SpatialIndex<T> {
+export class HybridSpatialIndex<T extends Positionable> implements SpatialIndex<T> {
 	private staticIndex: KDTreeIndex<T>;
 	private dynamicIndex: UniformGrid<T>;
 
@@ -15,7 +15,7 @@ export class HybridSpatialIndex<T extends IPositionable> implements SpatialIndex
 
 	insert(obj: T, dynamic: boolean | null = null): void {
 		if (dynamic === null) {
-			dynamic = isTranslateable(obj);
+			dynamic = isMoveable(obj);
 		}
 
 		if (dynamic) {
@@ -39,6 +39,13 @@ export class HybridSpatialIndex<T extends IPositionable> implements SpatialIndex
 			...this.staticIndex.queryRange(min, max),
 			...this.dynamicIndex.queryRange(min, max),
 		];
+	}
+
+	getAllObjects(): T[] {
+		return [
+			...this.staticIndex.getAllObjects(),
+			...this.dynamicIndex.getAllObjects()
+		]
 	}
 
 	clear(): void {

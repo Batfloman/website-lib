@@ -1,9 +1,11 @@
 import { Vector2 } from "math";
-import { IPositionable } from "engine/propertys";
+import { Positionable } from "engine/traits";
+import { SpatialIndex } from "./spacialIndex";
 
-export class UniformGrid<T extends IPositionable> {
+export class UniformGrid<T extends Positionable> implements SpatialIndex<T> {
 	private cellSize: number;
 	private cells: Map<string, Set<T>> = new Map();
+	private objects: Set<T> = new Set();
 
 	constructor(cellSize: number = 64) {
 		this.cellSize = cellSize;
@@ -14,16 +16,20 @@ export class UniformGrid<T extends IPositionable> {
 	}
 
 	insert(obj: T) {
-		const key = this.cellKey(obj.pos);
+		const key = this.cellKey(obj.position);
 		if (!this.cells.has(key)) {
 			this.cells.set(key, new Set());
 		}
 		this.cells.get(key)!.add(obj);
+
+		this.objects.add(obj);
 	}
 
 	remove(obj: T) {
-		const key = this.cellKey(obj.pos);
+		const key = this.cellKey(obj.position);
 		this.cells.get(key)?.delete(obj);
+
+		this.objects.delete(obj);
 	}
 
 	update(obj: T) {
@@ -44,8 +50,8 @@ export class UniformGrid<T extends IPositionable> {
 				if (this.cells.has(key)) {
 					for (const obj of this.cells.get(key)!) {
 						if (
-							obj.pos.x >= min.x && obj.pos.x <= max.x &&
-							obj.pos.y >= min.y && obj.pos.y <= max.y
+							obj.position.x >= min.x && obj.position.x <= max.x &&
+							obj.position.y >= min.y && obj.position.y <= max.y
 						) {
 							results.push(obj);
 						}
@@ -55,6 +61,10 @@ export class UniformGrid<T extends IPositionable> {
 		}
 
 		return results;
+	}
+
+	getAllObjects(): T[] {
+		return Array.from(this.objects);
 	}
 
 	clear() {

@@ -1,20 +1,20 @@
 import { ObjectScene } from "./ObjectScene";
-import { IRenderable, IPositionable, isPositionable } from "engine/propertys";
+import { IRenderable } from "engine/propertys";
+import { Positionable, isPositionable } from "engine/traits";
 import { Vector2 } from "math";
 import { HybridSpatialIndex } from "engine/spacial";
 import { SceneObject } from "engine/entities";
 
 export class WorldScene extends ObjectScene {
-	private spatialIndex = new HybridSpatialIndex<IPositionable>();
+	private spatialIndex = new HybridSpatialIndex<Positionable>();
 
 	addObject(
-		obj: SceneObject & Partial<IRenderable> & Partial<IPositionable>
+		obj: SceneObject & Partial<IRenderable> & Partial<Positionable>
 	) {
 		super.addObject(obj);
 
 		if (isPositionable(obj)) {
-			// null = auto-detect based on `mover` property from ITranslateable
-			this.spatialIndex.insert(obj as IPositionable, null);
+			this.spatialIndex.insert(obj as Positionable, null);
 		}
 	}
 
@@ -22,18 +22,22 @@ export class WorldScene extends ObjectScene {
 		super.removeObject(obj);
 
 		if (isPositionable(obj)) {
-			this.spatialIndex.remove(obj as IPositionable);
+			this.spatialIndex.remove(obj as Positionable);
 		}
 	}
 
-	updateObjectPosition(obj: IPositionable) {
+	updateObjectPosition(obj: Positionable) {
 		this.spatialIndex.update(obj);
 	}
 
-	getObjectsInArea(area: { pos: Vector2; size: Vector2 }): IPositionable[] {
+	getObjectsInArea(area: { pos: Vector2; size: Vector2 }): Positionable[] {
 		const min = area.pos;
 		const max = new Vector2(area.pos.x + area.size.x, area.pos.y + area.size.y);
 		return this.spatialIndex.queryRange(min, max);
+	}
+
+	getObjects(): Positionable[] {
+		return this.spatialIndex.getAllObjects();
 	}
 
 	clearObjects() {

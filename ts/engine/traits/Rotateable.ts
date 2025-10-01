@@ -18,7 +18,7 @@ export function isRotateable(obj: any): obj is Rotateable {
 export function RotateableTrait<TBase extends Constructor | AbstractConstructor>(Base: TBase) {
 	return class MoveableImpl extends Base implements Rotateable {
 		// Hidden runtime marker for trait detection
-		declare readonly [RotateableTag] = true;
+		readonly [RotateableTag] = true;
 
 		rotation = 0;
 	};

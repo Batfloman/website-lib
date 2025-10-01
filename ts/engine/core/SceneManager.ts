@@ -1,10 +1,10 @@
+import { IUpdateable } from "engine/propertys";
 import { Scene } from "engine/scenes";
 import { Renderer } from "engine/renderer";
-import { IUpdateable } from "engine/propertys";
 
 export class SceneManager implements IUpdateable {
 	private sceneMap: Map<string, Scene> = new Map();
-	private activeScenes: Scene[] = [];
+	private activeScene: Scene | null = null;
 
 	addScene(name: string, scene: Scene) {
 		this.sceneMap.set(name, scene);
@@ -12,43 +12,45 @@ export class SceneManager implements IUpdateable {
 
 	enableScene(name: string) {
 		const scene = this.sceneMap.get(name);
-		if (scene && !this.activeScenes.includes(scene)) {
-			this.activeScenes.push(scene);
-			scene.onLoad?.(); // optionaler Hook
-		}
+		if (!scene) return;
+
+		// unload previous scene
+		this.activeScene?.onUnload?.();
+
+		// set new scene
+		this.activeScene = scene;
+		this.activeScene.onLoad?.();
 	}
 
-	disableScene(name: string) {
-		const scene = this.sceneMap.get(name);
-		if (scene) {
-			this.activeScenes = this.activeScenes.filter(s => s !== scene);
-			scene.onUnload?.(); // optionaler Hook
-		}
+	disableScene() {
+		this.activeScene?.onUnload?.();
+		this.activeScene = null;
 	}
 
 	clearScenes() {
-		for (const scene of this.activeScenes) {
-			scene.onUnload?.();
-		}
-		this.activeScenes = [];
+		this.disableScene();
+		this.sceneMap.clear();
 	}
 
 	fixedUpdate(dt: number) {
-		for (const scene of this.activeScenes) {
-			scene.fixedUpdate?.(dt);
-		}
+		this.activeScene?.fixedUpdate?.(dt);
 	}
 
 	update(dt: number) {
-		for (const scene of this.activeScenes) {
-			scene.update(dt);
-		}
+		this.activeScene?.update?.(dt);
 	}
 
 	render(renderer: Renderer) {
-		renderer.clear()
-		for (const scene of this.activeScenes) {
-			scene.render(renderer);
-		}
+		renderer.clear();
+		this.activeScene?.render(renderer);
+	}
+
+	// helper
+	getActiveScene(): Scene | null {
+		return this.activeScene;
+	}
+
+	getScene(name: string): Scene | undefined {
+		return this.sceneMap.get(name);
 	}
 }

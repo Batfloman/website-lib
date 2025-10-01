@@ -1,11 +1,11 @@
 import { Vector2 } from "math";
+import { Positionable, PositionableTrait } from "./Positionable";
 
 type Constructor<T = {}> = new (...args: any[]) => T;
 type AbstractConstructor<T = {}> = abstract new (...args: any[]) => T;
 
 // --- Type definition ---
-export interface Moveable {
-	position: Vector2;
+export interface Moveable extends Positionable {
 	move(dx: number, dy: number): void;
 }
 
@@ -18,11 +18,10 @@ export function isMoveable(obj: any): obj is Moveable {
 }
 
 // --- Mixin function ---
-
 export function MoveableTrait<TBase extends Constructor | AbstractConstructor>(Base: TBase) {
-	return class MoveableImpl extends Base implements Moveable {
+	return class MoveableImpl extends PositionableTrait(Base) implements Moveable {
 		// Hidden runtime marker for trait detection
-		declare readonly [MoveableTag]: true;
+		readonly [MoveableTag] = true;
 
 		// Default position (0,0)
 		position: Vector2 = new Vector2(0, 0);

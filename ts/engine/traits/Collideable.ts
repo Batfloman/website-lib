@@ -21,7 +21,7 @@ export function CollideableTrait<
 	TBase extends Constructor
 >(Base: TBase) {
 	abstract class CollideableImpl extends Base implements Collideable<THitBox> {
-		declare readonly [CollideableTag] = true;
+		readonly [CollideableTag] = true;
 
 		abstract hitbox: THitBox;
 	}
