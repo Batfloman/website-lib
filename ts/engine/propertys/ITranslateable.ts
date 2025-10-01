@@ -25,7 +25,7 @@ export class TranslationBehavior {
 	}
 }
 
-export function isPositionable(obj: any): obj is IPositionable {
+export function isPositionable_old(obj: any): obj is IPositionable {
 	return obj?.pos instanceof Vector2;
 }
 

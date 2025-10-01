@@ -28,7 +28,7 @@ export const EngineUtil = {
 			const camaraScale = camara.scaleValue;
 			const camaraPos = camara.pos;
 
-			const distance = worldPos.subtract(camaraPos).scale(camaraScale);
+			const distance = worldPos.subtract(camaraPos).scaleBy(camaraScale);
 
 			const staticPos = new Vector2(
 				Util.math.round(distance.x, 5),
@@ -42,7 +42,7 @@ export const EngineUtil = {
 			const camaraCenter = camara.getOffset();
 			const camaraScale = camara.scaleValue;
 
-			const distance = staticPos.subtract(camaraCenter).scale(1 / camaraScale);
+			const distance = staticPos.subtract(camaraCenter).scaleBy(1 / camaraScale);
 
 			const worldPos = camara.pos.add(
 				new Vector2(Util.math.round(distance.x, 5), Util.math.round(-distance.y, 5))
