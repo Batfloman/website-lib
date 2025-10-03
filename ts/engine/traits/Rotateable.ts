@@ -1,26 +1,23 @@
-type Constructor<T = {}> = new (...args: any[]) => T;
-type AbstractConstructor<T = {}> = abstract new (...args: any[]) => T;
+type AnyConstructor<T = {}> = abstract new (...args: any[]) => T;
 
 // --- Type definition ---
 export interface Rotateable {
 	rotation: number;
 }
 
-// --- Unique runtime identifier ---
-export const RotateableTag = Symbol("Rotateable");
-
-// --- Runtime type guard ---
-export function isRotateable(obj: any): obj is Rotateable {
-	return !!obj?.[RotateableTag];
-}
-
 // --- Mixin function ---
-export function RotateableTrait<TBase extends Constructor | AbstractConstructor>(Base: TBase) {
-	return class MoveableImpl extends Base implements Rotateable {
+export function RotateableTrait(Base: AnyConstructor) {
+	abstract class RotateableImpl extends Base implements Rotateable {
 		// Hidden runtime marker for trait detection
-		readonly [RotateableTag] = true;
+		readonly [RotateableTrait.tag] = true;
 
 		rotation = 0;
 	};
+	return RotateableImpl
 }
 
+RotateableTrait.tag = Symbol("Rotateable");
+
+RotateableTrait.is = function(obj: any): obj is Rotateable {
+	return !!obj?.[RotateableTrait.tag]
+}

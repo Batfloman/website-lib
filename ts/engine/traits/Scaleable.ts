@@ -1,5 +1,4 @@
-type Constructor<T = {}> = new (...args: any[]) => T;
-type AbstractConstructor<T = {}> = abstract new (...args: any[]) => T;
+type AnyConstructor<T = {}> = abstract new (...args: any[]) => T;
 
 // --- Type definition ---
 export interface Scaleable {
@@ -8,19 +7,11 @@ export interface Scaleable {
 	scaleBy(scale: number): void;
 }
 
-// --- Unique runtime identifier ---
-export const ScaleableTag = Symbol("Scaleable");
-
-// --- Runtime type guard ---
-export function isScaleable(obj: any): obj is Scaleable {
-	return !!obj?.[ScaleableTag];
-}
-
 // --- Mixin function ---
-export function ScaleableTrait<TBase extends Constructor | AbstractConstructor>(Base: TBase) {
-	return class ScaleableImpl extends Base implements Scaleable {
+export function ScaleableTrait(Base: AnyConstructor) {
+	abstract class ScaleableImpl extends Base implements Scaleable {
 		// Hidden runtime marker for trait detection
-		readonly [ScaleableTag] = true;
+		readonly [ScaleableTrait.tag] = true;
 
 		// Default position (0,0)
 		scale: number = 1;
@@ -33,4 +24,11 @@ export function ScaleableTrait<TBase extends Constructor | AbstractConstructor>(
 			this.scale *= scale;
 		}
 	};
+	return ScaleableImpl;
+}
+
+ScaleableTrait.tag = Symbol("Scaleable")
+
+ScaleableTrait.is = function(obj: any): obj is Scaleable {
+	return !!obj?.[ScaleableTrait.tag];
 }

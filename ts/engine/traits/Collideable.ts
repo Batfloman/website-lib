@@ -1,30 +1,35 @@
 import { HitBox } from "engine/physic";
+import { Positionable } from "./Positionable";
+import { Vector2 } from "math";
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type AnyConstructor<T = {}> = abstract new (...args: any[]) => T;
 
 // --- Type definition ---
-export interface Collideable<THitBox extends HitBox> {
+export interface Collideable<THitBox extends HitBox> extends Positionable {
 	hitbox: THitBox;
-}
 
-// --- Unique runtime identifier ---
-export const CollideableTag = Symbol("Collideable");
-
-// --- Runtime type guard ---
-export function isCollideable<THitBox extends HitBox = HitBox>(obj: any): obj is Collideable<THitBox> {
-	return !!obj?.[CollideableTag];
+	position: Vector2;
+	rotation: number;
+	scale: number;
 }
 
 // --- Mixin function ---
-export function CollideableTrait<
-	THitBox extends HitBox,
-	TBase extends Constructor
->(Base: TBase) {
+export function CollideableTrait<THitBox extends HitBox>(Base: AnyConstructor) {
 	abstract class CollideableImpl extends Base implements Collideable<THitBox> {
-		readonly [CollideableTag] = true;
+		readonly [CollideableTrait.tag] = true;
 
 		abstract hitbox: THitBox;
+
+		abstract position: Vector2;
+		rotation: number = 0;
+		scale: number = 1;
 	}
 
 	return CollideableImpl;
 }
+
+CollideableTrait.tag = Symbol("Collideable");
+
+CollideableTrait.is = function <THitBox extends HitBox>(obj: any): obj is Collideable<THitBox> {
+	return !!obj?.[CollideableTrait.tag];
+};

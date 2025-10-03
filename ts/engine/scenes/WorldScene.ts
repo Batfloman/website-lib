@@ -1,6 +1,6 @@
 import { ObjectScene } from "./ObjectScene";
 import { IRenderable } from "engine/propertys";
-import { Positionable, isPositionable } from "engine/traits";
+import { Positionable, PositionableTrait } from "engine/traits";
 import { Vector2 } from "math";
 import { HybridSpatialIndex } from "engine/spacial";
 import { SceneObject } from "engine/entities";
@@ -13,7 +13,7 @@ export class WorldScene extends ObjectScene {
 	) {
 		super.addObject(obj);
 
-		if (isPositionable(obj)) {
+		if (PositionableTrait.is(obj)) {
 			this.spatialIndex.insert(obj as Positionable, null);
 		}
 	}
@@ -21,7 +21,7 @@ export class WorldScene extends ObjectScene {
 	removeObject(obj: any) {
 		super.removeObject(obj);
 
-		if (isPositionable(obj)) {
+		if (PositionableTrait.is(obj)) {
 			this.spatialIndex.remove(obj as Positionable);
 		}
 	}

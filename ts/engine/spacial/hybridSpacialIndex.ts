@@ -1,4 +1,4 @@
-import { Positionable, isMoveable } from "engine/traits";
+import { MoveableTrait, Positionable } from "engine/traits";
 import { SpatialIndex } from "./spacialIndex";
 import { UniformGrid } from "./uniformGrid";
 import { KDTreeIndex } from "./kdTreeIndex";
@@ -15,7 +15,7 @@ export class HybridSpatialIndex<T extends Positionable> implements SpatialIndex<
 
 	insert(obj: T, dynamic: boolean | null = null): void {
 		if (dynamic === null) {
-			dynamic = isMoveable(obj);
+			dynamic = MoveableTrait.is(obj);
 		}
 
 		if (dynamic) {
