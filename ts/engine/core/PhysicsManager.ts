@@ -1,6 +1,7 @@
 import { Integrable, Integrator } from "engine/physic/integrator/Integrator";
+import { System } from "./System";
 
-export class PhysicsManager {
+export class PhysicsManager implements System {
 	private objs: Integrable[] = [];
 	private integrator: Integrator;
 
@@ -21,8 +22,11 @@ export class PhysicsManager {
 		this.objs.forEach((o, i) => o.setState(nextStates[i]));
 	}
 
+	fixedUpdate(dt: number): void {
+		this.step(dt);
+	}
+
 	setIntegrator(integrator: Integrator) {
 		this.integrator = integrator;
 	}
 }
-
