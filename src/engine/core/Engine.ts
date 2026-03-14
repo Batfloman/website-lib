@@ -1,5 +1,5 @@
 import type { InputSource } from "../input";
-import type { Renderer } from "../render";
+import { createRenderContext, type Renderer } from "../render";
 import type { System } from "../systems";
 import type { Scene } from "../world";
 import { GameLoop, type GameLoopOptions, type LoopDriver, type LoopHooks } from "./GameLoop";
@@ -41,6 +41,7 @@ export class Engine implements LoopHooks {
   readonly systems: System[];
   readonly loop: GameLoop;
   private activeScene?: Scene;
+  private elapsedTime = 0;
 
   constructor(options: EngineOptions) {
     const resolvedOptions = createDefaultEngineOptions(options);
@@ -77,15 +78,28 @@ export class Engine implements LoopHooks {
   }
 
   fixedUpdate(fixedDt: number): void {
-    void fixedDt;
+    this.elapsedTime += fixedDt;
+    this.activeScene?.fixedUpdate({
+      dt: fixedDt,
+      fixedDt,
+      alpha: 0,
+      time: this.elapsedTime,
+    });
   }
 
   update(dt: number, fixedDt: number): void {
-    void dt;
-    void fixedDt;
+    this.activeScene?.update({
+      dt,
+      fixedDt,
+      alpha: 0,
+      time: this.elapsedTime,
+    });
   }
 
   render(alpha: number): void {
-    void alpha;
+    this.activeScene?.render(
+      this.renderer,
+      createRenderContext({ alpha }),
+    );
   }
 }

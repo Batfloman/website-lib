@@ -1,5 +1,6 @@
 import type { BaseComponents } from "../components";
-import type { EntityId } from "../common";
+import type { EntityId, FixedUpdateContext, UpdateContext } from "../common";
+import type { RenderContext, Renderer } from "../render";
 
 export interface EntityOptions<TComponents extends BaseComponents = BaseComponents> {
   id: EntityId;
@@ -38,4 +39,10 @@ export class Entity<TComponents extends BaseComponents = BaseComponents> {
   getTags(): readonly string[] {
     return [...this.tags];
   }
+
+  fixedUpdate(_context: FixedUpdateContext): void {}
+
+  update(_context: UpdateContext): void {}
+
+  render(_renderer: Renderer, _context: RenderContext): void {}
 }

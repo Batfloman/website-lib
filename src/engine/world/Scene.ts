@@ -1,4 +1,5 @@
-import type { EntityId } from "../common";
+import type { EntityId, FixedUpdateContext, UpdateContext } from "../common";
+import type { RenderContext, Renderer } from "../render";
 import { Entity } from "./Entity";
 
 export class Scene {
@@ -40,5 +41,27 @@ export class Scene {
 
   clear(): void {
     this.entities.clear();
+  }
+
+  fixedUpdate(context: FixedUpdateContext): void {
+    for (const entity of this.entities.values()) {
+      entity.fixedUpdate(context);
+    }
+  }
+
+  update(context: UpdateContext): void {
+    for (const entity of this.entities.values()) {
+      entity.update(context);
+    }
+  }
+
+  render(renderer: Renderer, context: RenderContext): void {
+    renderer.beginFrame(this);
+
+    for (const entity of this.entities.values()) {
+      entity.render(renderer, context);
+    }
+
+    renderer.endFrame(this);
   }
 }
