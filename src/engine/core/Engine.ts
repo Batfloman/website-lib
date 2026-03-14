@@ -12,6 +12,29 @@ export interface EngineOptions extends GameLoopOptions {
   loopDriver?: LoopDriver;
 }
 
+interface ResolvedEngineOptions extends GameLoopOptions {
+  renderer: Renderer;
+  input?: InputSource;
+  systems: System[];
+  initialScene?: Scene;
+  loopDriver?: LoopDriver;
+}
+
+function createDefaultEngineOptions(
+  options: EngineOptions,
+): ResolvedEngineOptions {
+  return {
+    renderer: options.renderer,
+    input: options.input,
+    systems: [...(options.systems ?? [])],
+    initialScene: options.initialScene,
+    loopDriver: options.loopDriver,
+    fixedDt: options.fixedDt ?? 1 / 60,
+    maxFrameDt: options.maxFrameDt ?? 0.25,
+    renderWhilePaused: options.renderWhilePaused ?? true,
+  };
+}
+
 export class Engine implements LoopHooks {
   readonly renderer: Renderer;
   readonly input?: InputSource;
@@ -20,11 +43,13 @@ export class Engine implements LoopHooks {
   private activeScene?: Scene;
 
   constructor(options: EngineOptions) {
-    this.renderer = options.renderer;
-    this.input = options.input;
-    this.systems = options.systems ?? [];
-    this.activeScene = options.initialScene;
-    this.loop = new GameLoop(this, options.loopDriver, options);
+    const resolvedOptions = createDefaultEngineOptions(options);
+
+    this.renderer = resolvedOptions.renderer;
+    this.input = resolvedOptions.input;
+    this.systems = resolvedOptions.systems;
+    this.activeScene = resolvedOptions.initialScene;
+    this.loop = new GameLoop(this, resolvedOptions.loopDriver, resolvedOptions);
   }
 
   setScene(scene: Scene): void {
