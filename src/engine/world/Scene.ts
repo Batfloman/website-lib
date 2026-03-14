@@ -1,13 +1,20 @@
 import type { EntityId, FixedUpdateContext, UpdateContext } from "../common";
+import type { PhysicsSimulation } from "../physics";
 import type { RenderContext, Renderer } from "../render";
 import { Entity } from "./Entity";
+
+export interface SceneOptions {
+  simulation?: PhysicsSimulation;
+}
 
 export class Scene {
   readonly name: string;
   private readonly entities = new Map<EntityId, Entity>();
+  readonly simulation?: PhysicsSimulation;
 
-  constructor(name: string) {
+  constructor(name: string, options: SceneOptions = {}) {
     this.name = name;
+    this.simulation = options.simulation;
   }
 
   addEntity(entity: Entity): Entity {
@@ -16,10 +23,25 @@ export class Scene {
     }
 
     this.entities.set(entity.id, entity);
+    const physicsBody = entity.components.physicsBody;
+    if (physicsBody) {
+      this.simulation?.addBody(physicsBody);
+    }
+
     return entity;
   }
 
   removeEntity(entityId: EntityId): boolean {
+    const entity = this.entities.get(entityId);
+    if (!entity) {
+      return false;
+    }
+
+    const physicsBody = entity.components.physicsBody;
+    if (physicsBody) {
+      this.simulation?.removeBody(physicsBody);
+    }
+
     return this.entities.delete(entityId);
   }
 
@@ -40,10 +62,19 @@ export class Scene {
   }
 
   clear(): void {
+    for (const entity of this.entities.values()) {
+      const physicsBody = entity.components.physicsBody;
+      if (physicsBody) {
+        this.simulation?.removeBody(physicsBody);
+      }
+    }
+
     this.entities.clear();
   }
 
   fixedUpdate(context: FixedUpdateContext): void {
+    this.simulation?.step(context.fixedDt, context.time);
+
     for (const entity of this.entities.values()) {
       entity.fixedUpdate(context);
     }

@@ -1,7 +1,7 @@
-import type { PhysicsComponent } from "./PhysicsComponent";
+import type { PhysicsBodyComponent } from "../physics";
 import type { TransformComponent } from "./TransformComponent";
 
 export interface BaseComponents {
   transform?: TransformComponent;
-  physics?: PhysicsComponent;
+  physicsBody?: PhysicsBodyComponent;
 }
