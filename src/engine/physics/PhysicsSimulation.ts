@@ -6,7 +6,7 @@ export abstract class PhysicsSimulation<
 > {
   private readonly bodies = new Set<TBody>();
 
-  constructor(private readonly integrator: Integrator) {}
+  constructor(private readonly integrator: Integrator) { }
 
   addBody(body: TBody): void {
     this.bodies.add(body);
