@@ -127,7 +127,8 @@ export class GameLoop {
       this.hooks.render(0);
     }
 
-    if (this.state !== "idle") {
+    const nextState = this.state as GameLoopState;
+    if (nextState !== "idle") {
       this.scheduleNextFrame();
     }
   };

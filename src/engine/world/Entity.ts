@@ -3,9 +3,16 @@ import type { EntityId, FixedUpdateContext, UpdateContext } from "../common";
 import type { RenderContext, Renderer } from "../render";
 
 export interface EntityOptions<TComponents extends BaseComponents = BaseComponents> {
-  id: EntityId;
+  id?: EntityId;
   tags?: Iterable<string>;
   components?: TComponents;
+}
+
+let entityIdCounter = 0;
+
+function createEntityId(): EntityId {
+  entityIdCounter += 1;
+  return `entity-${entityIdCounter}`;
 }
 
 export class Entity<TComponents extends BaseComponents = BaseComponents> {
@@ -14,7 +21,7 @@ export class Entity<TComponents extends BaseComponents = BaseComponents> {
   private readonly tags = new Set<string>();
 
   constructor(options: EntityOptions<TComponents>) {
-    this.id = options.id;
+    this.id = options.id ?? createEntityId();
     this.components = (options.components ?? {}) as TComponents;
 
     if (options.tags) {

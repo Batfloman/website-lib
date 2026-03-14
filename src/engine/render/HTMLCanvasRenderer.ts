@@ -9,14 +9,16 @@ import {
 
 export class HTMLCanvasRenderer extends Renderer {
   readonly camera: Camera;
+  readonly context: CanvasRenderingContext2D;
 
   constructor(
     public readonly canvas: HTMLCanvasElement,
-    public readonly context: CanvasRenderingContext2D,
     camera?: Camera,
+    context?: CanvasRenderingContext2D,
   ) {
     super();
     this.camera = camera ?? new Camera();
+    this.context = context ?? HTMLCanvasRenderer.createContext(canvas);
   }
 
   beginFrame(_scene: Scene): void {}
@@ -28,4 +30,15 @@ export class HTMLCanvasRenderer extends Renderer {
   drawRect(_options: DrawRectOptions): void {}
 
   drawCircle(_options: DrawCircleOptions): void {}
+
+  private static createContext(
+    canvas: HTMLCanvasElement,
+  ): CanvasRenderingContext2D {
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("Could not acquire a 2D rendering context from the canvas.");
+    }
+
+    return context;
+  }
 }
