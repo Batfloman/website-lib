@@ -1,3 +1,4 @@
+import type { Controller } from "../controllers";
 import type { InputSource } from "../input";
 import { createRenderContext, type Renderer } from "../render";
 import type { System } from "../systems";
@@ -7,6 +8,7 @@ import { GameLoop, type GameLoopOptions, type LoopDriver, type LoopHooks } from 
 export interface EngineOptions extends GameLoopOptions {
   renderer: Renderer;
   input?: InputSource;
+  controllers?: Controller[];
   systems?: System[];
   initialScene?: Scene;
   loopDriver?: LoopDriver;
@@ -15,6 +17,7 @@ export interface EngineOptions extends GameLoopOptions {
 interface ResolvedEngineOptions extends GameLoopOptions {
   renderer: Renderer;
   input?: InputSource;
+  controllers: Controller[];
   systems: System[];
   initialScene?: Scene;
   loopDriver?: LoopDriver;
@@ -26,6 +29,7 @@ function createDefaultEngineOptions(
   return {
     renderer: options.renderer,
     input: options.input,
+    controllers: [...(options.controllers ?? [])],
     systems: [...(options.systems ?? [])],
     initialScene: options.initialScene,
     loopDriver: options.loopDriver,
@@ -38,16 +42,19 @@ function createDefaultEngineOptions(
 export class Engine implements LoopHooks {
   readonly renderer: Renderer;
   readonly input?: InputSource;
+  readonly controllers: Controller[];
   readonly systems: System[];
   readonly loop: GameLoop;
   private activeScene?: Scene;
   private elapsedTime = 0;
+  private currentInputSnapshot?: ReturnType<InputSource["sample"]>;
 
   constructor(options: EngineOptions) {
     const resolvedOptions = createDefaultEngineOptions(options);
 
     this.renderer = resolvedOptions.renderer;
     this.input = resolvedOptions.input;
+    this.controllers = resolvedOptions.controllers;
     this.systems = resolvedOptions.systems;
     this.activeScene = resolvedOptions.initialScene;
     this.loop = new GameLoop(this, resolvedOptions.loopDriver, resolvedOptions);
@@ -88,6 +95,18 @@ export class Engine implements LoopHooks {
   }
 
   update(dt: number, fixedDt: number): void {
+    this.currentInputSnapshot = this.input?.sample();
+
+    for (const controller of this.controllers) {
+      controller.update({
+        dt,
+        fixedDt,
+        alpha: 0,
+        time: this.elapsedTime,
+        input: this.currentInputSnapshot,
+      });
+    }
+
     this.activeScene?.update({
       dt,
       fixedDt,

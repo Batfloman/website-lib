@@ -37,6 +37,7 @@ export class HTMLCanvasRenderer extends Renderer {
     this.context.scale(this.surface.pixelRatio, this.surface.pixelRatio);
     this.context.fillStyle = this.clearColor;
     this.context.fillRect(0, 0, this.surface.width, this.surface.height);
+    this.applyCameraTransform();
   }
 
   endFrame(_scene: Scene): void {
@@ -77,6 +78,20 @@ export class HTMLCanvasRenderer extends Renderer {
 
     this.context.strokeStyle = options.color ?? "#ffffff";
     this.context.stroke();
+  }
+
+  private applyCameraTransform(): void {
+    this.context.translate(this.surface.width / 2, this.surface.height / 2);
+    this.context.scale(this.camera.zoom, this.camera.zoom);
+
+    if (this.camera.rotation !== 0) {
+      this.context.rotate(-this.camera.rotation);
+    }
+
+    this.context.translate(
+      -this.camera.position.x,
+      -this.camera.position.y,
+    );
   }
 
   private static createContext(
