@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-	entry: ['ts/index.ts'], // Einstiegspunkt(e)
+	entry: ['src/index.ts'], // Einstiegspunkt(e)
 	format: ['esm', 'cjs'],  // Ausgabeformate
 	dts: true,               // .d.ts-Dateien generieren
 	sourcemap: true,         // Source Maps erzeugen
