@@ -1,36 +1,67 @@
+import { APP_ACTIONS, APP_AXES, type AppAction, type AppAxis } from "../input";
 import type { Camera } from "../render";
 import type { Controller, ControllerContext } from "./Controller";
 
-export interface CameraControllerOptions {
+export const CAMERA_AXES = {
+  horizontal: APP_AXES.cameraHorizontal,
+  vertical: APP_AXES.cameraVertical,
+  zoom: APP_AXES.cameraZoom,
+} as const satisfies Record<string, AppAxis>;
+
+export const CAMERA_ACTIONS = {
+  drag: APP_ACTIONS.cameraDrag,
+  zoomIn: APP_ACTIONS.cameraZoomIn,
+  zoomOut: APP_ACTIONS.cameraZoomOut,
+} as const satisfies Record<string, AppAction>;
+
+export type CameraAxisName = (typeof CAMERA_AXES)[keyof typeof CAMERA_AXES];
+export type CameraActionName = (typeof CAMERA_ACTIONS)[keyof typeof CAMERA_ACTIONS];
+
+export interface CameraControllerOptions<
+  TAction extends string = CameraActionName,
+  TAxis extends string = CameraAxisName,
+> {
   moveSpeed?: number;
   zoomSpeed?: number;
-  horizontalAxis?: string;
-  verticalAxis?: string;
-  zoomInAction?: string;
-  zoomOutAction?: string;
+  dragSpeed?: number;
+  horizontalAxis?: TAxis;
+  verticalAxis?: TAxis;
+  zoomAxis?: TAxis;
+  dragAction?: TAction;
+  zoomInAction?: TAction;
+  zoomOutAction?: TAction;
 }
 
-export class CameraController implements Controller {
+export class CameraController<
+  TAction extends string = AppAction,
+  TAxis extends string = AppAxis,
+> implements Controller<TAction, TAxis> {
   readonly moveSpeed: number;
   readonly zoomSpeed: number;
-  readonly horizontalAxis: string;
-  readonly verticalAxis: string;
-  readonly zoomInAction: string;
-  readonly zoomOutAction: string;
+  readonly dragSpeed: number;
+  readonly horizontalAxis: TAxis;
+  readonly verticalAxis: TAxis;
+  readonly zoomAxis?: TAxis;
+  readonly dragAction: TAction;
+  readonly zoomInAction: TAction;
+  readonly zoomOutAction: TAction;
 
   constructor(
     private readonly camera: Camera,
-    options: CameraControllerOptions = {},
+    options: CameraControllerOptions<TAction, TAxis> = {},
   ) {
     this.moveSpeed = options.moveSpeed ?? 500;
     this.zoomSpeed = options.zoomSpeed ?? 1;
-    this.horizontalAxis = options.horizontalAxis ?? "camera-horizontal";
-    this.verticalAxis = options.verticalAxis ?? "camera-vertical";
-    this.zoomInAction = options.zoomInAction ?? "camera-zoom-in";
-    this.zoomOutAction = options.zoomOutAction ?? "camera-zoom-out";
+    this.dragSpeed = options.dragSpeed ?? 1;
+    this.horizontalAxis = (options.horizontalAxis ?? CAMERA_AXES.horizontal) as TAxis;
+    this.verticalAxis = (options.verticalAxis ?? CAMERA_AXES.vertical) as TAxis;
+    this.zoomAxis = options.zoomAxis ?? (CAMERA_AXES.zoom as TAxis);
+    this.dragAction = (options.dragAction ?? CAMERA_ACTIONS.drag) as TAction;
+    this.zoomInAction = (options.zoomInAction ?? CAMERA_ACTIONS.zoomIn) as TAction;
+    this.zoomOutAction = (options.zoomOutAction ?? CAMERA_ACTIONS.zoomOut) as TAction;
   }
 
-  update(context: ControllerContext): void {
+  update(context: ControllerContext<TAction, TAxis>): void {
     if (!context.input) {
       return;
     }
@@ -44,12 +75,27 @@ export class CameraController implements Controller {
       );
     }
 
-    let zoomDirection = 0;
-    if (context.input.isPressed(this.zoomInAction)) {
-      zoomDirection += 1;
+    if (context.input.isPressed(this.dragAction)) {
+      const pointerDelta = context.input.getPointerDelta();
+      if (pointerDelta.x !== 0 || pointerDelta.y !== 0) {
+        this.camera.translate(
+          (-pointerDelta.x * this.dragSpeed) / this.camera.zoom,
+          (-pointerDelta.y * this.dragSpeed) / this.camera.zoom,
+        );
+      }
     }
-    if (context.input.isPressed(this.zoomOutAction)) {
-      zoomDirection -= 1;
+
+    let zoomDirection = this.zoomAxis
+      ? context.input.getAxis(this.zoomAxis)
+      : 0;
+
+    if (zoomDirection === 0) {
+      if (context.input.isPressed(this.zoomInAction)) {
+        zoomDirection += 1;
+      }
+      if (context.input.isPressed(this.zoomOutAction)) {
+        zoomDirection -= 1;
+      }
     }
 
     if (zoomDirection !== 0) {

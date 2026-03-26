@@ -1,31 +1,40 @@
 import type { Controller } from "../controllers";
-import type { InputSource } from "../input";
+import type { AppAction, AppAxis, InputSource } from "../input";
 import { createRenderContext, type Renderer } from "../render";
 import type { System } from "../systems";
 import type { Scene } from "../world";
 import { GameLoop, type GameLoopOptions, type LoopDriver, type LoopHooks } from "./GameLoop";
 
-export interface EngineOptions extends GameLoopOptions {
+export interface EngineOptions<
+  TAction extends string = AppAction,
+  TAxis extends string = AppAxis,
+> extends GameLoopOptions {
   renderer: Renderer;
-  input?: InputSource;
-  controllers?: Controller[];
+  input?: InputSource<TAction, TAxis>;
+  controllers?: Controller<TAction, TAxis>[];
   systems?: System[];
   initialScene?: Scene;
   loopDriver?: LoopDriver;
 }
 
-interface ResolvedEngineOptions extends GameLoopOptions {
+interface ResolvedEngineOptions<
+  TAction extends string = AppAction,
+  TAxis extends string = AppAxis,
+> extends GameLoopOptions {
   renderer: Renderer;
-  input?: InputSource;
-  controllers: Controller[];
+  input?: InputSource<TAction, TAxis>;
+  controllers: Controller<TAction, TAxis>[];
   systems: System[];
   initialScene?: Scene;
   loopDriver?: LoopDriver;
 }
 
-function createDefaultEngineOptions(
-  options: EngineOptions,
-): ResolvedEngineOptions {
+function createDefaultEngineOptions<
+  TAction extends string = AppAction,
+  TAxis extends string = AppAxis,
+>(
+  options: EngineOptions<TAction, TAxis>,
+): ResolvedEngineOptions<TAction, TAxis> {
   return {
     renderer: options.renderer,
     input: options.input,
@@ -39,17 +48,20 @@ function createDefaultEngineOptions(
   };
 }
 
-export class Engine implements LoopHooks {
+export class Engine<
+  TAction extends string = AppAction,
+  TAxis extends string = AppAxis,
+> implements LoopHooks {
   readonly renderer: Renderer;
-  readonly input?: InputSource;
-  readonly controllers: Controller[];
+  readonly input?: InputSource<TAction, TAxis>;
+  readonly controllers: Controller<TAction, TAxis>[];
   readonly systems: System[];
   readonly loop: GameLoop;
   private activeScene?: Scene;
   private elapsedTime = 0;
-  private currentInputSnapshot?: ReturnType<InputSource["sample"]>;
+  private currentInputSnapshot?: ReturnType<InputSource<TAction, TAxis>["sample"]>;
 
-  constructor(options: EngineOptions) {
+  constructor(options: EngineOptions<TAction, TAxis>) {
     const resolvedOptions = createDefaultEngineOptions(options);
 
     this.renderer = resolvedOptions.renderer;

@@ -1,10 +1,16 @@
 import type { TickContext } from "../common";
-import type { InputSnapshot } from "../input";
+import type { AppAction, AppAxis, InputSnapshot } from "../input";
 
-export interface ControllerContext extends TickContext {
-  input?: InputSnapshot;
+export interface ControllerContext<
+  TAction extends string = AppAction,
+  TAxis extends string = AppAxis,
+> extends TickContext {
+  input?: InputSnapshot<TAction, TAxis>;
 }
 
-export interface Controller {
-  update(context: ControllerContext): void;
+export interface Controller<
+  TAction extends string = AppAction,
+  TAxis extends string = AppAxis,
+> {
+  update(context: ControllerContext<TAction, TAxis>): void;
 }
